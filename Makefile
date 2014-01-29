@@ -1,13 +1,16 @@
 PYPYPATH ?= ../pypy
 PYTHON ?= python2
 TRANSLATE = $(PYTHON) $(PYPYPATH)/rpython/translator/goal/translate.py
+REVISION = $(shell git show --oneline | head -1 | sed 's/ .*//' | tr -d " ")
+UNAME = $(shell uname -s -m | tr "A-Z " "a-z-" | tr -d " ")
+PACKAGE = psota-$(REVISION)-$(UNAME)
 ifeq ($(shell rlwrap -v 2> /dev/null | grep rlwrap -c), 1)
 	RLWRAP = rlwrap
 else
 	RLWRAP =
 endif
 
-.PHONY: all clean repl-O2 repl-Ojit repl
+.PHONY: all clean repl-O2 repl-Ojit repl tarball
 
 all: psota-O2
 
@@ -28,3 +31,17 @@ repl-Ojit: psota-Ojit
 
 repl-O2: psota-O2
 	$(RLWRAP) ./psota-O2 ./repl.clj
+
+tarball: $(PACKAGE).tar.xz
+
+$(PACKAGE).tar.xz: psota-Ojit $(shell git ls-files './*.clj')
+	test -d ./.git
+	test "$(REVISION)"
+	test "$(PACKAGE)"
+	rm -rf ./$(PACKAGE)*
+	mkdir $(PACKAGE)
+	cp $^ $(PACKAGE)
+	strip $(PACKAGE)/$<
+	tar -cf $(PACKAGE).tar $(PACKAGE)/*
+	xz $(PACKAGE).tar
+	rm -rf ./$(PACKAGE)
