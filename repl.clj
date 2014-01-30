@@ -276,6 +276,17 @@
                   ~(cons 'fn-destructure (rest args))))))
     (cons 'fn-destructure args)))
 
+(defn zipmap
+  [keys vals]
+  (loop [acc {}
+         keys (seq keys)
+         vals (seq vals)]
+    (if (and keys vals)
+      (recur (assoc acc (first keys) (first vals))
+             (next keys)
+             (next vals))
+      acc)))
+
 (defn partial
   [f & xs]
   (fn [& ys] (apply f (concat xs ys))))
