@@ -124,70 +124,71 @@ def emit_list(st, bindings, node, recur_bindings):
     list_w = unwrap(node)
     if len(list_w) == 0:
         return [OP_SYM, st.add_sym("list"), OP_INVOKE, 0]
-    w_head = cast(list_w[0], W_Sym)
-    head = w_head.val
-    if head == "if":
-        cond_code = emit(st, bindings, list_w[1])
-        true_code = emit(st, bindings, list_w[2], recur_bindings)
-        false_code = emit(st, bindings, list_w[3], recur_bindings)
-        jmp_code = [OP_RELJMP, len(false_code)]
-        code = (cond_code + [OP_IF, len(true_code) + len(jmp_code)] +
-                true_code + jmp_code + false_code)
-        return code
-    elif head == "let*":
-        sym = cast(list_w[1], W_Sym)
-        binding_code = emit(st, bindings, list_w[2])
-        id = st.add_sym(sym.val)
-        inner_code = emit(st, bindings, list_w[3], recur_bindings)
-        code = binding_code + [OP_PUSH_ENV, id] + inner_code + [OP_POP_ENV]
-        return code
-    elif head == "do":
-        body_code = []
-        for step in list_w[1:]:
-            body_code += emit(st, bindings, step, recur_bindings)
-        return body_code
-    elif head == "quote":
-        return emit_quote(st, bindings, list_w[1])
-    elif head == "`":
-        return emit_quasiquote(st, bindings, list_w[1])
-    elif head == "fn*":
-        return fn(st, bindings, list_w)
-    elif head == "defmacro*":
-        return defmacro(st, bindings, list_w)
-    elif head == "def*":
-        var_sym = cast(list_w[1], W_Sym)
-        id = st.add_sym(var_sym.val)
-        val_code = emit(st, bindings, list_w[2])
-        return val_code + [OP_DEF, id]
-    elif head == "try*":
-        return try_block(st, bindings, list_w)
-    elif head == "recur":
-        args = list_w[1:]
-        args_code = []
-        for arg in args:
-            c = emit(st, bindings, arg)
-            args_code += c + [OP_PUSH]
-        if recur_bindings == no_recur_bindings:
-            raise CompilationException("Not a recur point :o")
-        (ids, rest_id) = recur_bindings
-        bindings_ids = [x for x in reversed(ids)] + \
-                [-rest_id if rest_id >= 0 else -1]
-        return args_code + [OP_RECUR, len(args)] + bindings_ids
-    elif st.has_macro(head):
-        return expand_macro(st, bindings, st.get_macro(head), list_w[1:], recur_bindings)
-    else:
-        args = list_w[1:]
-        args_code = []
-        for arg in args:
-            c = emit(st, bindings, arg)
-            args_code += c + [OP_PUSH]
-        if head == "apply":
-            fn_code = []
-            op = OP_APPLY
-        else:
-            fn_code = emit(st, bindings, list_w[0])
-            op = OP_INVOKE
-        return args_code + fn_code + [op, len(args)]
+    w_head = list_w[0]
+    args_w = list_w[1:]
+    if isinstance(w_head, W_Sym):
+        head = w_head.val
+        if head == "if":
+            cond_code = emit(st, bindings, list_w[1])
+            true_code = emit(st, bindings, list_w[2], recur_bindings)
+            false_code = emit(st, bindings, list_w[3], recur_bindings)
+            jmp_code = [OP_RELJMP, len(false_code)]
+            code = (cond_code + [OP_IF, len(true_code) + len(jmp_code)] +
+                    true_code + jmp_code + false_code)
+            return code
+        elif head == "let*":
+            sym = cast(list_w[1], W_Sym)
+            binding_code = emit(st, bindings, list_w[2])
+            id = st.add_sym(sym.val)
+            inner_code = emit(st, bindings, list_w[3], recur_bindings)
+            code = binding_code + [OP_PUSH_ENV, id] + inner_code + [OP_POP_ENV]
+            return code
+        elif head == "do":
+            body_code = []
+            for step in list_w[1:]:
+                body_code += emit(st, bindings, step, recur_bindings)
+            return body_code
+        elif head == "quote":
+            return emit_quote(st, bindings, list_w[1])
+        elif head == "`":
+            return emit_quasiquote(st, bindings, list_w[1])
+        elif head == "fn*":
+            return fn(st, bindings, list_w)
+        elif head == "defmacro*":
+            return defmacro(st, bindings, list_w)
+        elif head == "def*":
+            var_sym = cast(list_w[1], W_Sym)
+            id = st.add_sym(var_sym.val)
+            val_code = emit(st, bindings, list_w[2])
+            return val_code + [OP_DEF, id]
+        elif head == "try*":
+            return try_block(st, bindings, list_w)
+        elif head == "recur":
+            args = list_w[1:]
+            args_code = []
+            for arg in args:
+                c = emit(st, bindings, arg)
+                args_code += c + [OP_PUSH]
+            if recur_bindings == no_recur_bindings:
+                raise CompilationException("Not a recur point :o")
+            (ids, rest_id) = recur_bindings
+            bindings_ids = [x for x in reversed(ids)] + \
+                    [-rest_id if rest_id >= 0 else -1]
+            return args_code + [OP_RECUR, len(args)] + bindings_ids
+        elif st.has_macro(head):
+            return expand_macro(st, bindings, st.get_macro(head), list_w[1:], recur_bindings)
+        elif head == "apply":
+            args_code = []
+            for arg in args_w:
+                c = emit(st, bindings, arg)
+                args_code += c + [OP_PUSH]
+            return args_code + [OP_APPLY, len(args_w)]
+    args_code = []
+    for arg in args_w:
+        c = emit(st, bindings, arg)
+        args_code += c + [OP_PUSH]
+    fn_code = emit(st, bindings, w_head)
+    return args_code + fn_code + [OP_INVOKE, len(args_w)]
 
 no_recur_bindings = ([], -1)
 empty_recur_bindings = ([], -2)
