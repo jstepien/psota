@@ -314,7 +314,9 @@
   (let [first-arg (first args)
         type (class first-arg)
         f (or (get-in protocol [type fname])
-              (get-in first-arg [protocol-name fname]))]
+              (and (map? first-arg)
+                   (get-in first-arg [protocol-name fname]))
+              (throw (str first-arg " doesn't implement " protocol-name)))]
     (apply f args)))
 
 (defmacro defprotocol
@@ -342,18 +344,72 @@
   [atom val]
   (swap! atom (fn [_] val)))
 
-(defn pr [& coll]
+(defn print [& coll]
   (reduce (fn [first obj]
             (do
              (when-not first
-               (pr1 " "))
-             (pr1 obj)))
+               (print1 " "))
+             (print1 obj)))
           true
           coll))
 
-(defn prn [& coll]
-  (apply pr coll)
-  (pr "\n"))
+(defn println [& coll]
+  (apply print coll)
+  (print "\n"))
+
+(defprotocol Pr
+  (pr* [x]))
+
+(let [pr*-as-str {'pr* str}]
+  ;; Poor man's doseq
+  (last
+    (map (fn [specimen] (extend (class specimen) (var Pr) pr*-as-str))
+         [nil 1 :kw 'sym true println (class ())])))
+
+(let [classes (map class [[] () (lazy-seq ())])
+      punctuation (zipmap classes
+                          [["[" "]"] ["(" ")"] ["(" ")"]])
+      impl {'pr* (fn [coll]
+                   (let [[open close] (get punctuation (class coll))]
+                     (str
+                       (reduce (fn [acc el]
+                                 (str acc
+                                      (if (= open acc)
+                                        ""
+                                        " ")
+                                      (pr* el)))
+                               open
+                               coll)
+                       close)))}]
+  ;; Poor man's doseq
+  (last (map (fn [cls] (extend cls (var Pr) impl))
+             classes)))
+
+(let [impl {'pr* (fn [map]
+                   (str
+                     (reduce (fn [acc [key val]]
+                               (str acc
+                                    (if (= "{" acc)
+                                      ""
+                                      " ")
+                                    (pr* key)
+                                    " "
+                                    (pr* val)))
+                             "{"
+                             map)
+                     "}"))}]
+  ;; Poor man's doseq
+  (last (map (fn [specimen] (extend (class specimen) (var Pr) impl))
+             [(array-map) (hash-map)])))
+
+(extend (class "")
+  (var Pr) {'pr* (fn [s] (str "\"" s "\""))})
+
+(defn pr [& args]
+  (apply print (map pr* args)))
+
+(defn prn [& args]
+  (apply println (map pr* args)))
 
 (defn count
   [coll]
@@ -372,10 +428,10 @@
       (cons 'do forms))))
 
 (defn repl []
-  (pr (str *ns* "=> "))
+  (print (str *ns* "=> "))
   (let [line (getline)]
     (if (= "" line)
-      (prn "")
+      (println)
       (do
         (try
           (-> line read-string eval prn)

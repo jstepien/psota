@@ -12,7 +12,7 @@ def arity(n):
         return wrapped
     return wrap
 
-class PrOne(space.W_BIF):
+class Print1(space.W_BIF):
     @arity(1)
     def invoke(self, args, *_):
         os.write(1, args[0].to_str())
@@ -299,7 +299,7 @@ core = [
         ('=', Eq()),
         ('+', Add()),
         ('-', Subtract()),
-        ('pr1', PrOne()),
+        ('print1', Print1()),
         ('list', List()),
         ('first', First()),
         ('rest', Rest()),

@@ -42,6 +42,7 @@ class W_Nil(W_Value):
 w_nil = W_Nil()
 W_Nil._type = w_nil
 W_Value._type = W_Type("Value")
+W_Type._type = W_Type("Type")
 
 class W_Boolean(W_Value):
     _type = W_Type("Boolean")
@@ -267,6 +268,8 @@ class W_Int(W_Value):
         return self.val
 
 class W_Fun(W_Value):
+    _type = W_Type("Fn")
+
     _immutable_fields_ = ["code", "arg_ids", "rest_args_id", "env"]
 
     def __init__(self, code, arg_ids, rest_args_id=-1, env=None):
@@ -284,7 +287,7 @@ class W_Fun(W_Value):
     hash = hash_by_reference
 
 class W_BIF(W_Value):
-    pass
+    _type = W_Fun._type
 
 class W_Map(W_Obj):
     def hash(self):
