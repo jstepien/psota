@@ -307,10 +307,11 @@ def const_len(code):
     return len(code)
 
 stack_size = 100
+empty_stack = []
 
 def eval(env, bindings, st, code):
     ip = 0
-    stack = [None for _ in range(stack_size)]
+    stack = empty_stack
     sp = 0
     r1 = space.w_nil
     while ip < const_len(code):
@@ -357,6 +358,8 @@ def eval(env, bindings, st, code):
             ip += 1
             r1 = st.get_fn(get_op(code, ip)).with_env(env)
         elif op == OP_PUSH:
+            if stack is empty_stack:
+                stack = [None for _ in range(stack_size)]
             stack[jit.promote(sp)] = r1
             sp += 1
         elif op == OP_DEF:
