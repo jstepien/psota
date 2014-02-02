@@ -233,7 +233,10 @@ class W_String(W_Value):
     def hash(self):
         return compute_hash(self.val) + 2
 
-class W_Keyword(W_Obj):
+class W_BIF(W_Obj):
+    _type = W_Type("Fn")
+
+class W_Keyword(W_BIF):
     _type = W_Type("Keyword")
 
     def __init__(self, val, meta=w_nil):
@@ -252,6 +255,13 @@ class W_Keyword(W_Obj):
     def hash(self):
         return compute_hash(self.val) + 3
 
+    def invoke(self, args, *_):
+        map = args[0]
+        if map == w_nil:
+            return w_nil
+        else:
+            return args[0].get(self)
+
 class W_Int(W_Value):
     _type = W_Type("Int")
 
@@ -268,7 +278,7 @@ class W_Int(W_Value):
         return self.val
 
 class W_Fun(W_Value):
-    _type = W_Type("Fn")
+    _type = W_BIF._type
 
     _immutable_fields_ = ["code", "arg_ids", "rest_args_id", "env"]
 
@@ -286,10 +296,7 @@ class W_Fun(W_Value):
 
     hash = hash_by_reference
 
-class W_BIF(W_Value):
-    _type = W_Fun._type
-
-class W_Map(W_Obj):
+class W_Map(W_BIF):
     def hash(self):
         elems = self.elems()
         hash = 0
@@ -298,6 +305,9 @@ class W_Map(W_Obj):
             hash += elems[idx].hash() ^ elems[idx + 1].hash()
             idx += 2
         return hash
+
+    def invoke(self, args, *_):
+        return self.get(args[0])
 
 class W_ArrayMap(W_Map):
     _type = W_Type("PersistentArrayMap")
