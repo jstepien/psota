@@ -1,10 +1,10 @@
 import eval
 from eval import (OP_KEYWORD, OP_IF, OP_SYM, OP_QUOTE, OP_RELJMP, OP_PUSH, OP_FN,
         OP_RECUR, OP_INVOKE, OP_DEF, OP_INT, OP_PUSH_ENV, OP_POP_ENV, OP_APPLY,
-        OP_STRING, OP_TRY)
+        OP_STRING, OP_TRY, OP_CHAR)
 from space import (W_List, W_Int, W_EmptyList, W_Vector, W_Sym, W_Fun, unwrap,
         W_Seq, W_ArrayMap, W_Keyword, w_nil, W_String, CompilationException,
-        cast)
+        W_Char, cast)
 
 def mkfn(st, bindings, w_args, w_body):
     args = []
@@ -210,6 +210,8 @@ def emit(st, bindings, node, recur_bindings=no_recur_bindings):
         return [OP_STRING, id]
     elif isinstance(node, W_Int):
         return [OP_INT, node.val]
+    elif isinstance(node, W_Char):
+        return [OP_CHAR, node.val]
     elif isinstance(node, W_List):
         return emit_list(st, bindings, node, recur_bindings)
     elif isinstance(node, W_Vector):

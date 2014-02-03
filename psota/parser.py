@@ -2,7 +2,7 @@ from rpython.rlib.parsing.pypackrat import PackratParser
 from rpython.rlib.parsing.makepackrat import BacktrackException, Status
 
 from space import (W_Int, W_Sym, W_Vector, wrap, W_ArrayMap, W_Keyword,
-        ParsingException)
+        W_Char, ParsingException)
 
 # Most of the parser has been taken from lang-scheme. You can find it at
 # https://bitbucket.org/pypy/lang-scheme/src/b1d5a1b8744f/scheme/ssparser.py
@@ -53,6 +53,12 @@ class QuoppaParser(PackratParser):
         IGNORE*
         return {wrap(str_unquote(c))};
 
+    CHAR:
+        '\'
+        c = `[a-zA-Z0-9]+`
+        IGNORE*
+        return {char(c)};
+
     EOF:
         !__any__;
 
@@ -87,6 +93,7 @@ class QuoppaParser(PackratParser):
       | FIXNUM
       | keyword
       | STRING
+      | CHAR
       | SYMBOL;
 
     vector:
@@ -132,3 +139,13 @@ def unquote(sexpr):
 
 def map(args):
     return W_ArrayMap(args)
+
+def char(val):
+    if len(val) == 1:
+        return W_Char(ord(val[0]))
+    elif val == "space":
+        return W_Char(ord(" "))
+    elif val == "newline":
+        return W_Char(ord("\n"))
+    else:
+        raise ParsingException("Invalid character: %s" % val)

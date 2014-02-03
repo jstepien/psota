@@ -218,6 +218,22 @@ class W_Sym(W_Obj):
     def hash(self):
         return compute_hash(self.val) + 1
 
+class W_Char(W_Value):
+    _type = W_Type("Char")
+
+    def __init__(self, val):
+        assert isinstance(val, int)
+        self.val = val
+
+    def to_str(self):
+        return chr(self.val)
+
+    def equals(self, other):
+        return isinstance(other, W_Char) and other.val == self.val
+
+    def hash(self):
+        return self.val
+
 class W_String(W_Value):
     _type = W_Type("String")
 

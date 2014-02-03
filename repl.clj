@@ -366,6 +366,14 @@
     (map (fn [specimen] (extend (class specimen) (var Pr) pr*-as-str))
          [nil 1 :kw 'sym true println (class ())])))
 
+(extend (class \a)
+  (var Pr) {'pr* (fn [c]
+                   (let [s (str c)]
+                     (cond
+                       (= " " s) "\\space"
+                       (= "\n" s) "\\newline"
+                       :else (str "\\" s))))})
+
 (let [classes (map class [[] () (lazy-seq ())])
       punctuation (zipmap classes
                           [["[" "]"] ["(" ")"] ["(" ")"]])

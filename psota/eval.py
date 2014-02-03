@@ -126,7 +126,8 @@ def base_env(st):
         OP_RECUR,
         OP_STRING,
         OP_TRY,
-        ) = range(16)
+        OP_CHAR,
+        ) = range(17)
 
 @jit.elidable
 def lookup_in_bindings(bindings, version, sym_id):
@@ -392,6 +393,9 @@ def eval(env, bindings, st, code):
                 stack[jit.promote(sp)] = space.wrap(ex.reason())
                 sp += 1
                 ip += 1
+        elif op == OP_CHAR:
+            ip += 1
+            r1 = space.W_Char(get_op(code, ip))
         else:
             raise Exception("Unknown code: %s, ip %s, code %s" %
                     (str(op), ip, str(code)))
