@@ -249,6 +249,18 @@ class W_String(W_Value):
     def hash(self):
         return compute_hash(self.val) + 2
 
+    def first(self):
+        if self.val == "":
+            return w_nil
+        else:
+            return W_Char(ord(self.val[0]))
+
+    def rest(self):
+        if len(self.val) < 2:
+            return w_empty_list
+        else:
+            return W_String(self.val[1:])
+
 class W_BIF(W_Obj):
     _type = W_Type("Fn")
 
