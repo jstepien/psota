@@ -4,6 +4,7 @@ TRANSLATE = $(PYTHON) $(PYPYPATH)/rpython/translator/goal/translate.py
 REVISION = $(shell git show --oneline | head -1 | sed 's/ .*//' | tr -d " ")
 UNAME = $(shell uname -s -m | tr "A-Z " "a-z-" | tr -d " ")
 PACKAGE = psota-$(REVISION)-$(UNAME)
+PYTHON_SOURCES = $(shell git ls-files './psota/*.py')
 ifeq ($(shell rlwrap -v 2> /dev/null | grep rlwrap -c), 1)
 	RLWRAP = rlwrap
 else
@@ -14,10 +15,10 @@ endif
 
 all: psota-O2
 
-psota-O2:
+psota-O2: $(PYTHON_SOURCES)
 	PYTHONPATH=$(PYPYPATH) $(TRANSLATE) -O2 --output $@ psota/targetpsota.py
 
-psota-Ojit:
+psota-Ojit: $(PYTHON_SOURCES)
 	PYTHONPATH=$(PYPYPATH) $(TRANSLATE) -Ojit --output $@ psota/targetpsota.py
 
 clean:
