@@ -26,7 +26,7 @@
 
 (defmacro defn
   [name args & body]
-  `(def ~name (fn ~args ~(cons 'do body))))
+  `(def ~name ~(cons 'fn (cons args body))))
 
 (defn not (x) (if x false true))
 
@@ -256,13 +256,13 @@
   (cons 'let-destructured (cons (destructure bindings) body)))
 
 (defmacro fn-destructure
-  [args body]
+  [args & body]
   (if (every? symbol? args)
-    `(fn* ~args ~body)
+    (cons 'fn* (cons args body))
     (let [orig-args (gensym)]
       `(fn* [& ~orig-args]
          (let ~(destructure (vector args orig-args))
-           ~body)))))
+           ~(cons 'do body))))))
 
 (defmacro fn
   [& args]

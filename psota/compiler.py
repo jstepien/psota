@@ -6,7 +6,7 @@ from space import (W_List, W_Int, W_EmptyList, W_Vector, W_Sym, W_Fun, unwrap,
         W_Seq, W_ArrayMap, W_Keyword, w_nil, W_String, CompilationException,
         W_Char, cast)
 
-def mkfn(st, bindings, w_args, w_body):
+def mkfn(st, bindings, w_args, body_w):
     args = []
     rest_args_id = -1
     arg_vec_w = unwrap(cast(w_args, W_Seq))
@@ -29,12 +29,14 @@ def mkfn(st, bindings, w_args, w_body):
         recur_bindings = (ids, rest_args_id)
     else:
         recur_bindings = empty_recur_bindings
-    code = emit(st, bindings, w_body, recur_bindings)
+    code = []
+    for w_elem in body_w:
+        code += emit(st, bindings, w_elem, recur_bindings)
     return st.add_fn(W_Fun(code, ids, rest_args_id))
 
 def defmacro(st, bindings, list_w):
-    _, w_name, w_args, w_body = list_w
-    fn_id = mkfn(st, bindings, w_args, w_body)
+    _, w_name, w_args = list_w[0:3]
+    fn_id = mkfn(st, bindings, w_args, list_w[3:])
     st.add_macro(cast(w_name, W_Sym).val, fn_id)
     return []
 
@@ -48,8 +50,8 @@ def expand_macro(st, bindings, macro_id, args_w, recur_bindings):
     return emit(st, bindings, value, recur_bindings)
 
 def fn(st, bindings, list_w):
-    _, w_args, w_body = list_w
-    fn_id = mkfn(st, bindings, w_args, w_body)
+    _, w_args = list_w[0:2]
+    fn_id = mkfn(st, bindings, w_args, list_w[2:])
     return [OP_FN, fn_id]
 
 def try_block(st, bindings, list_w):
