@@ -45,6 +45,10 @@
     init
     (recur f (f init (first coll)) (rest coll))))
 
+(defn count
+  [coll]
+  (reduce (fn [acc _] (+ acc 1)) 0 coll))
+
 (defn last
   [coll]
   (reduce (fn [_ x] x) nil coll))
@@ -264,7 +268,7 @@
          (let ~(destructure (vector args orig-args))
            ~(cons 'do body))))))
 
-(defmacro fn
+(defmacro fn-with-single-arity
   [& args]
   (if (symbol? (first args))
     (let* storage (gensym)
@@ -286,6 +290,27 @@
              (next keys)
              (next vals))
       acc)))
+
+(defmacro fn
+  [& args]
+  (cond
+    (or (vector? (first args))
+        (symbol? (first args))) (cons 'fn-with-single-arity args)
+    (every? list? args)
+    (if (= 1 (count args))
+      (cons 'fn (first args))
+      (let [arities (map (comp count first) args)
+            fns (map (fn [tail] (cons 'fn tail)) args)
+            variants (gensym)]
+        `(let [~variants ~(zipmap arities fns)]
+           (fn-with-single-arity
+             [& coll]
+             (let [nargs (count coll)
+                   f (get ~variants nargs)]
+               (if f
+                 (apply f coll)
+                 (throw (str "Incorrect arity: " nargs))))))))
+    :else (throw "Unsupported fn form")))
 
 (defn partial
   [f & xs]
@@ -418,10 +443,6 @@
 
 (defn prn [& args]
   (apply println (map pr* args)))
-
-(defn count
-  [coll]
-  (reduce (fn [acc _] (+ acc 1)) 0 coll))
 
 (defmacro try
   [& forms]
