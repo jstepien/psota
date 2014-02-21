@@ -456,6 +456,33 @@
         (fn* [~(second maybe-catch)] ~(cons 'do (drop 2 maybe-catch))))
       (cons 'do forms))))
 
+(defn filter [f coll]
+  (if (seq coll)
+    (lazy-seq
+      (let [[c & cs] coll]
+        (if (f c)
+          (cons c (filter f cs))
+          (filter f cs))))
+    ()))
+
+(defn take-while [f coll]
+  (if (seq coll)
+    (lazy-seq
+      (let [[c & cs] coll]
+        (if (f c)
+          (cons c (take-while f cs))
+          ())))
+    ()))
+
+(defn drop-while [f coll]
+  (if (seq coll)
+    (lazy-seq
+      (let [[c & cs] coll]
+        (if (f c)
+          (drop-while f cs)
+          cs)))
+    ()))
+
 (defn repl []
   (print (str *ns* "=> "))
   (let [line (getline)]
