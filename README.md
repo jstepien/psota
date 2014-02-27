@@ -28,9 +28,9 @@ Let's do it.
 
 ## Building and running
 
-You need Python 2 and a checkout of [PyPy][pypy-hg]. PyPy is expected to be
-located in `../pypy`. If it's elsewhere specify path to it using `PYPYPATH`
-environment variable.
+You need Python 2 and sources of [PyPy][pypy].
+PyPy is expected to be located in `../pypy`.
+If it's elsewhere specify path to it using `PYPYPATH` environment variable.
 
 To build an executable and run a REPL invoke
 
@@ -76,6 +76,6 @@ terms.
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
 
-[pypy-hg]: https://bitbucket.org/pypy/pypy
+[pypy]: http://pypy.org/download.html#building-from-source
 [clj]: http://clojure.org/
 [twitter]: https://twitter.com/janstepien
