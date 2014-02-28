@@ -40,18 +40,18 @@
 
 (defmacro comment [& _] 'nil)
 
-(defn reduce [f init coll]
+(defn reduce* [f init coll]
   (if (= coll ())
     init
     (recur f (f init (first coll)) (rest coll))))
 
 (defn count
   [coll]
-  (reduce (fn [acc _] (+ acc 1)) 0 coll))
+  (reduce* (fn [acc _] (+ acc 1)) 0 coll))
 
 (defn last
   [coll]
-  (reduce (fn [_ x] x) nil coll))
+  (reduce* (fn [_ x] x) nil coll))
 
 (defn comp
   [f & fs]
@@ -172,9 +172,9 @@
    (if (= ys ())
      xs
      (reverse
-      (reduce (fn [acc el]  (cons el acc))
-              (reverse xs)
-              ys)))))
+      (reduce* (fn [acc el]  (cons el acc))
+               (reverse xs)
+               ys)))))
 
 (defn conj [xs x]
   (if (vector? xs)
@@ -233,6 +233,8 @@
   (not (not (get coll key))))
 
 (def seq? list?)
+
+(def reduce reduce*)
 
 (load "destructure.clj")
 
@@ -312,6 +314,12 @@
                  (throw (str "Incorrect arity: " nargs))))))))
     :else (throw "Unsupported fn form")))
 
+(defn reduce
+  ([f init coll]
+   (reduce* f init coll))
+  ([f coll]
+   (reduce* f (first coll) (rest coll))))
+
 (defn partial
   [f & xs]
   (fn [& ys] (apply f (concat xs ys))))
@@ -331,8 +339,9 @@
   [sym]
   `(var* (quote ~sym)))
 
-(def get-in
-  (partial reduce (fn [m cur] (get m cur))))
+(defn get-in
+  [m path]
+  (reduce (fn [m cur] (get m cur)) m path))
 
 (defn protocol-call
   [protocol protocol-name fname args]
