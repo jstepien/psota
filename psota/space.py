@@ -2,6 +2,12 @@ from rpython.rlib.objectmodel import specialize, r_dict, compute_hash
 
 hash_by_reference = lambda self: compute_hash(self)
 
+def _unimplemented(cls, method):
+    exc = Exception("Cannot call %s on an abstract %s" % (cls, method))
+    def f(self, *_):
+        raise exc
+    return f
+
 class W_Value:
     def to_str(self):
         return str(self)
@@ -35,6 +41,9 @@ class W_Nil(W_Value):
 
     def rest(self):
         return w_empty_list
+
+    def seq(self):
+        return w_nil
 
     def hash(self):
         return 0
@@ -87,6 +96,10 @@ class W_Seq(W_Obj):
             coll = coll.rest()
         return hash
 
+    seq = _unimplemented("W_Seq", "seq")
+    first = _unimplemented("W_Seq", "first")
+    rest = _unimplemented("W_Seq", "rest")
+
 class W_List(W_Seq):
     _type = W_Type("PersistentList")
 
@@ -111,7 +124,7 @@ class W_List(W_Seq):
 
 class W_EmptyList(W_List):
     def __init__(self):
-        pass
+        self.head = self.tail = w_nil
 
     def first(self):
         return w_nil
@@ -336,6 +349,9 @@ class W_Map(W_BIF):
 
     def invoke(self, args, *_):
         return self.get(args[0])
+
+    elems = _unimplemented("W_Map", "elems")
+    get = _unimplemented("W_Map", "get")
 
 class W_ArrayMap(W_Map):
     _type = W_Type("PersistentArrayMap")
