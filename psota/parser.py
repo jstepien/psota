@@ -46,7 +46,7 @@ class QuoppaParser(PackratParser):
         return {W_Int(int(c))};
 
     IGNORE:
-        ` |\n|\t|;[^\n]*`;
+        ` |,|\n|\t|;[^\n]*`;
 
     STRING:
         c = `\"([^\\\"]|\\\"|\\\\|\\n)*\"`
