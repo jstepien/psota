@@ -55,7 +55,7 @@ class QuoppaParser(PackratParser):
 
     CHAR:
         '\'
-        c = `[a-zA-Z0-9]+`
+        c = `[^ \n\t][a-z]*`
         IGNORE*
         return {char(c)};
 
