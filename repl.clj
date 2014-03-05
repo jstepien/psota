@@ -177,9 +177,9 @@
                ys)))))
 
 (defn conj [xs x]
-  (if (vector? xs)
-    (vec (concat xs [x]))
-    (cons x xs)))
+  (cond (vector? xs) (vec (concat xs [x]))
+        (map? xs) (assoc xs (first x) (second x))
+        :else (cons x xs)))
 
 (defmacro ->
   [x & ops]
@@ -491,6 +491,9 @@
           (drop-while f cs)
           cs)))
     ()))
+
+(defn into [base addends]
+  (reduce conj base addends))
 
 (defn repl []
   (print (str *ns* "=> "))
