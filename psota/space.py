@@ -76,6 +76,8 @@ class W_Obj(W_Value):
         return self.w_meta
 
 class W_Seq(W_Obj):
+    _type = W_Type("Seq")
+
     def equals(self, other):
         if self == other:
             return True

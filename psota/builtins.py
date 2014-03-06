@@ -53,13 +53,13 @@ class Vector(space.W_BIF):
 class First(space.W_BIF):
     @arity(1)
     def invoke(self, args, *_):
-        l = args[0]
+        l = space.cast(args[0], space.W_Seq)
         return l.first()
 
 class Rest(space.W_BIF):
     @arity(1)
     def invoke(self, args, *_):
-        l = args[0]
+        l = space.cast(args[0], space.W_Seq)
         return l.rest()
 
 class Cons(space.W_BIF):
