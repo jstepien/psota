@@ -208,6 +208,13 @@ class W_Vector(W_Seq):
     def elems(self):
         return self.buffer[self.start : self.end]
 
+    def get(self, key, not_found=w_nil):
+        idx = cast(key, W_Int).val
+        if idx >= 0 and self.start + idx < self.end:
+            return self.buffer[self.start + idx]
+        else:
+            return not_found
+
     def seq(self):
         if self.start < self.end:
             return self
