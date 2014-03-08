@@ -25,6 +25,9 @@ class W_Value:
         raise ClassCastException("%s of type %s is not hashable" %
                 (self, self.type().to_str()))
 
+    def invoke(self, *_):
+        raise SpaceException("Cannot invoke %s" % self.to_str())
+
 class W_Type(W_Value):
     def __init__(self, name):
         self.name = name
@@ -283,10 +286,7 @@ class W_String(W_Value):
         else:
             return W_String(self.val[1:])
 
-class W_BIF(W_Obj):
-    _type = W_Type("Fn")
-
-class W_Keyword(W_BIF):
+class W_Keyword(W_Obj):
     _type = W_Type("Keyword")
 
     def __init__(self, val, meta=w_nil):
@@ -328,7 +328,7 @@ class W_Int(W_Value):
         return self.val
 
 class W_Fun(W_Value):
-    _type = W_BIF._type
+    _type = W_Type("Fn")
 
     _immutable_fields_ = ["code", "arg_ids", "rest_args_id", "env"]
 
@@ -346,7 +346,10 @@ class W_Fun(W_Value):
 
     hash = hash_by_reference
 
-class W_Map(W_BIF):
+class W_BIF(W_Value):
+    _type = W_Fun._type
+
+class W_Map(W_Obj):
     def hash(self):
         elems = self.elems()
         hash = 0

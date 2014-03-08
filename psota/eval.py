@@ -215,17 +215,7 @@ def invoke(ip, env, code, r1, stack, sp, bindings):
     argc = jit.promote(get_op(code, ip))
     assert argc >= 0
     fn = jit.promote(r1)
-    if isinstance(fn, space.W_BIF):
-        new_sp = sp - argc
-        assert new_sp >= 0
-        args = [space.w_nil for _ in range(argc)]
-        for i in range(new_sp, sp):
-            args[i - new_sp] = stack[i]
-        ret = fn.invoke(args, bindings)
-        if ret is None:
-            ret = space.w_nil
-        return ret
-    elif isinstance(fn, space.W_Fun):
+    if isinstance(fn, space.W_Fun):
         arg_ids_len = const_len(fn.arg_ids)
         if fn.env.on_stack:
             new_env = Env([], fn.env)
@@ -255,7 +245,15 @@ def invoke(ip, env, code, r1, stack, sp, bindings):
         finally:
             new_env.mark_free()
     else:
-        raise space.SpaceException("Cannot invoke %s" % fn.to_str())
+        new_sp = sp - argc
+        assert new_sp >= 0
+        args = [space.w_nil for _ in range(argc)]
+        for i in range(new_sp, sp):
+            args[i - new_sp] = stack[i]
+        ret = fn.invoke(args, bindings)
+        if ret is None:
+            ret = space.w_nil
+        return ret
 
 @jit.unroll_safe
 def apply(ip, env, code, r1, stack, sp, bindings):
@@ -267,12 +265,7 @@ def apply(ip, env, code, r1, stack, sp, bindings):
     sp = new_sp
     args = space.unwrap(w_args)
     argc = len(args)
-    if isinstance(fn, space.W_BIF):
-        ret = fn.invoke(args, bindings)
-        if ret is None:
-            ret = space.w_nil
-        return ret
-    elif isinstance(fn, space.W_Fun):
+    if isinstance(fn, space.W_Fun):
         arg_ids_len = len(fn.arg_ids)
         if fn.env.on_stack:
             new_env = Env([], fn.env)
@@ -297,7 +290,10 @@ def apply(ip, env, code, r1, stack, sp, bindings):
         finally:
             new_env.mark_free()
     else:
-        raise space.SpaceException("Cannot apply %s" % fn.to_str())
+        ret = fn.invoke(args, bindings)
+        if ret is None:
+            ret = space.w_nil
+        return ret
 
 @jit.elidable
 def get_op(code, ip):
