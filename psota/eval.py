@@ -386,6 +386,8 @@ def eval(env, bindings, st, code):
                 r1 = eval(env, bindings, bindings.st, r1.code)
                 ip += code[ip + 1]
             except space.SpaceException as ex:
+                if stack is empty_stack:
+                    stack = [None for _ in range(stack_size)]
                 stack[jit.promote(sp)] = space.wrap(ex.reason())
                 sp += 1
                 ip += 1
