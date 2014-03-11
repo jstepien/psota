@@ -8,6 +8,11 @@ def _unimplemented(cls, method):
         raise exc
     return f
 
+def _unsupported(method):
+    def f(self, *_):
+        raise SpaceException("Cannot call %s on %s" % (method, self.to_str()))
+    return f
+
 class W_Value:
     def to_str(self):
         return str(self)
@@ -25,8 +30,9 @@ class W_Value:
         raise ClassCastException("%s of type %s is not hashable" %
                 (self, self.type().to_str()))
 
-    def invoke(self, *_):
-        raise SpaceException("Cannot invoke %s" % self.to_str())
+    invoke = _unsupported("invoke")
+    first = _unsupported("first")
+    rest = _unsupported("rest")
 
 class W_Type(W_Value):
     def __init__(self, name):
