@@ -7,7 +7,7 @@ def arity(n):
     def wrap(f):
         def wrapped(self, args, *rest):
             if len(args) != n:
-                raise space.ArityException(n, len(args))
+                raise space.ArityException(len(args), n)
             return f(self, args, *rest)
         return wrapped
     return wrap

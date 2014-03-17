@@ -225,7 +225,7 @@ def invoke(ip, env, code, r1, stack, sp, bindings):
             new_env.mark_used()
             if (argc < arg_ids_len or
                     (argc > arg_ids_len and not fn.got_rest_args())):
-                raise space.ArityException(arg_ids_len, argc)
+                raise space.ArityException(argc, arg_ids_len)
             if argc > arg_ids_len and fn.got_rest_args():
                 new_sp = sp - (argc - arg_ids_len)
                 assert new_sp >= 0
@@ -275,7 +275,7 @@ def apply(ip, env, code, r1, stack, sp, bindings):
             new_env.mark_used()
             if (argc < arg_ids_len or
                     (argc > arg_ids_len and not fn.got_rest_args())):
-                raise space.ArityException(arg_ids_len, argc)
+                raise space.ArityException(argc, arg_ids_len)
             if argc > arg_ids_len and fn.got_rest_args():
                 rest_args = [args.pop() for _ in range(argc - arg_ids_len)]
                 rest_args.reverse()

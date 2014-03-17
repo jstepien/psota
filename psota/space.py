@@ -542,9 +542,12 @@ class LookupException(SpaceException):
     pass
 
 class ArityException(SpaceException):
-    def __init__(self, expected, given):
-        SpaceException.__init__(self,
-            "Expected %s args, %s given" % (expected, given))
+    def __init__(self, given, expected = -1):
+        if expected == -1:
+            msg = "%s arguments given" % (given)
+        else:
+            msg = "Expected %s args, %s given" % (expected, given)
+        SpaceException.__init__(self, msg)
 
 class CompilationException(SpaceException):
     pass
