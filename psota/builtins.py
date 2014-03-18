@@ -86,13 +86,17 @@ class HashMap(space.W_BIF):
         return space.W_HashMap(args)
 
 class Get(space.W_BIF):
-    @arity(2)
     def invoke(self, args, *_):
+        argc = len(args)
+        if argc not in [2, 3]:
+            raise space.ArityException(len(args))
         map = args[0]
         if map == space.w_nil:
             return space.w_nil
+        elif argc == 2:
+            return args[0].get(args[1], space.w_nil)
         else:
-            return args[0].get(args[1])
+            return args[0].get(args[1], args[2])
 
 class Assoc(space.W_BIF):
     @arity(3)

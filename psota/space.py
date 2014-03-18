@@ -217,7 +217,7 @@ class W_Vector(W_Seq):
     def elems(self):
         return self.buffer[self.start : self.end]
 
-    def get(self, key, not_found=w_nil):
+    def get(self, key, not_found):
         idx = cast(key, W_Int).val
         if idx >= 0 and self.start + idx < self.end:
             return self.buffer[self.start + idx]
@@ -316,7 +316,7 @@ class W_Keyword(W_Obj):
         if map == w_nil:
             return w_nil
         else:
-            return args[0].get(self)
+            return args[0].get(self, w_nil)
 
 class W_Int(W_Value):
     _type = W_Type("Int")
@@ -366,7 +366,7 @@ class W_Map(W_Obj):
         return hash
 
     def invoke(self, args, *_):
-        return self.get(args[0])
+        return self.get(args[0], w_nil)
 
     elems = _unimplemented("W_Map", "elems")
     get = _unimplemented("W_Map", "get")
@@ -385,7 +385,7 @@ class W_ArrayMap(W_Map):
             ret += elem.to_str() + " "
         return "{}" if ret == "{" else ret[:-1] + "}"
 
-    def get(self, key, not_found=w_nil):
+    def get(self, key, not_found):
         idx = 0
         while idx < len(self.kvs):
             if key.equals(self.kvs[idx]):
@@ -456,7 +456,7 @@ class W_HashMap(W_Map):
             ret += key.to_str() + " " + self.dict[key].to_str() + " "
         return ret[:-1] + "}"
 
-    def get(self, key, not_found=w_nil):
+    def get(self, key, not_found):
         return self.dict.get(key, not_found)
 
     def elems(self):
