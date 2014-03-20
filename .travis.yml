@@ -1,0 +1,8 @@
+language: c
+script:
+  - make check
+install:
+  - wget https://bitbucket.org/pypy/pypy/downloads/pypy-2.2.1-src.tar.bz2
+  - tar -xf pypy-2.2.1-src.tar.bz2
+env:
+  - PYPYPATH=pypy-2.2.1-src

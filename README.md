@@ -1,6 +1,7 @@
 # Psota
 
 An implementation of a Lisp which is suspiciously similar to [Clojure][clj].
+[![Build Status](https://travis-ci.org/jstepien/psota.svg)](https://travis-ci.org/jstepien/psota)
 
 ## Goals and rationale
 
