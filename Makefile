@@ -11,7 +11,7 @@ else
 	RLWRAP =
 endif
 
-.PHONY: all clean repl-O2 repl-Ojit repl tarball
+.PHONY: all clean repl-O2 repl-Ojit repl tarball check
 
 all: psota-O2
 
@@ -32,6 +32,9 @@ repl-Ojit: psota-Ojit
 
 repl-O2: psota-O2
 	$(RLWRAP) ./psota-O2 ./repl.clj
+
+check: psota-O2
+	./psota-O2 test.clj
 
 tarball: $(PACKAGE).tar.xz
 
