@@ -368,6 +368,22 @@ class W_Map(W_Obj):
     def invoke(self, args, *_):
         return self.get(args[0], w_nil)
 
+    def equals(self, w_other):
+        if not isinstance(w_other, W_Map):
+            return False
+        # This check would be simpler if there was a len method for maps.
+        self_elems_w = self.elems()
+        other_elems_w = w_other.elems()
+        if not len(self_elems_w) == len(other_elems_w):
+            return False
+        idx = 0
+        while idx < len(self_elems_w):
+            val = w_other.get(self_elems_w[idx], None)
+            if val is None or not val.equals(self_elems_w[idx + 1]):
+                return False
+            idx += 2
+        return True
+
     elems = _unimplemented("W_Map", "elems")
     get = _unimplemented("W_Map", "get")
 
