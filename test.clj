@@ -39,4 +39,5 @@
   (= 1 (get {:a 1 :b 2} :a))
   (not (get {:a 1 :b 2} :c))
   (= 3 (get {:a 1 :b 2} :c 3))
-  (= {} (dissoc {:a 1} :a)))
+  (= {} (dissoc {:a 1} :a))
+  (= [nil nil] (map first [{} (hash-map)])))

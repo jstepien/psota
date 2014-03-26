@@ -440,6 +440,8 @@ class W_ArrayMap(W_Map):
         return W_ArrayMap(self.kvs, w_meta)
 
     def first(self):
+        if len(self.kvs) == 0:
+            return w_nil
         return W_Vector(self.kvs[0:2])
 
     def rest(self):
