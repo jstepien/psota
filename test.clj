@@ -26,11 +26,11 @@
 
   ;; seqs
   (every? (comp not seq)
-          [nil () [] (lazy-seq ()) ""])
+          [nil () [] (lazy-seq ()) "" {} (hash-map)])
   (every? (comp (partial = ()) rest)
-          [nil () [] (lazy-seq ()) ""])
+          [nil () [] (lazy-seq ()) "" {} (hash-map)])
   (every? (comp not first)
-          [nil () [] (lazy-seq ()) ""])
+          [nil () [] (lazy-seq ()) "" {} (hash-map)])
   (= () [])
   (not (= () nil))
   (not (= [] nil))
@@ -39,5 +39,4 @@
   (= 1 (get {:a 1 :b 2} :a))
   (not (get {:a 1 :b 2} :c))
   (= 3 (get {:a 1 :b 2} :c 3))
-  (= {} (dissoc {:a 1} :a))
-  (= [nil nil] (map first [{} (hash-map)])))
+  (= {} (dissoc {:a 1} :a)))

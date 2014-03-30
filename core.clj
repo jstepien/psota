@@ -193,7 +193,8 @@
       (cons '-> (cons current tl)))))
 
 (defn seq [coll]
-  (when-not (or (= () coll)
+  (when-not (or (= {} coll)
+                (= () coll)
                 (= "" coll))
     coll))
 
