@@ -63,7 +63,11 @@ class Rest(space.W_BIF):
 class Cons(space.W_BIF):
     @arity(2)
     def invoke(self, args, *_):
-        return space.W_List(args[0], args[1])
+        head, tail = args
+        if tail is space.w_nil:
+            return space.W_List(args[0], space.w_empty_list)
+        else:
+            return space.W_List(args[0], args[1])
 
 class Gensym(space.W_BIF):
     def __init__(self):
