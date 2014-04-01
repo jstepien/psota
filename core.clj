@@ -136,12 +136,18 @@
   [coll]
   `(lazy-seq* (fn [] ~coll)))
 
+(defn seq [coll]
+  (when-not (or (= {} coll)
+                (= () coll)
+                (= "" coll))
+    coll))
+
 (defn map [f coll]
-  (if (= coll ())
-    ()
-    (lazy-seq
+  (lazy-seq
+    (if (seq coll)
       (cons (f (first coll))
-            (map f (rest coll))))))
+            (map f (rest coll)))
+      ())))
 
 (defn vec
   [coll]
@@ -191,12 +197,6 @@
                     (list hd x)
                     (cons (first hd) (cons x (rest hd))))]
       (cons '-> (cons current tl)))))
-
-(defn seq [coll]
-  (when-not (or (= {} coll)
-                (= () coll)
-                (= "" coll))
-    coll))
 
 (def next (comp seq rest))
 
