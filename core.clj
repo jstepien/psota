@@ -2,6 +2,8 @@
   [& args]
   (cons 'defmacro* args))
 
+(def* gensym (fn* [] (gensym* "G__")))
+
 (defmacro fn
   [& args]
   (if (symbol? (first args))
@@ -315,6 +317,10 @@
                  (apply f coll)
                  (throw (str "Incorrect arity: " nargs))))))))
     :else (throw "Unsupported fn form")))
+
+(defn gensym
+  ([] (gensym* "G__"))
+  ([prefix] (gensym* prefix)))
 
 (defn reduce
   ([f init coll]

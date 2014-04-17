@@ -73,10 +73,10 @@ class Gensym(space.W_BIF):
     def __init__(self):
         self.counter = 0
 
-    @arity(0)
+    @arity(1)
     def invoke(self, args, bindings, *_):
         assert bindings is not None
-        val = "G__" + str(self.counter)
+        val = args[0].to_str() + str(self.counter)
         bindings.st.add_sym(val)
         self.counter += 1
         return space.W_Sym(val)
@@ -311,7 +311,7 @@ core = [
         ('rest', Rest()),
         ('cons', Cons()),
         ('vector', Vector()),
-        ('gensym', Gensym()),
+        ('gensym*', Gensym()),
         ('array-map', ArrayMap()),
         ('hash-map', HashMap()),
         ('get', Get()),
