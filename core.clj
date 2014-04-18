@@ -500,6 +500,16 @@
           cs)))
     ()))
 
+(defn butlast [[x & xs]]
+  (lazy-seq
+    (when (seq xs)
+      (cons x (butlast xs)))))
+
+(defn pop [coll]
+  (if (vector? coll)
+    (butlast coll)
+    (next coll)))
+
 (defn into [base addends]
   (reduce conj base addends))
 
