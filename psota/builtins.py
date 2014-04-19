@@ -195,6 +195,9 @@ def type_predicate(type):
 class SymbolP(space.W_BIF):
     invoke = type_predicate(space.W_Sym)
 
+class KeywordP(space.W_BIF):
+    invoke = type_predicate(space.W_Keyword)
+
 class VectorP(space.W_BIF):
     invoke = type_predicate(space.W_Vector)
 
@@ -327,6 +330,7 @@ core = [
         ('lazy-seq*', LazySeq()),
         ('class', Class()),
         ('symbol?', SymbolP()),
+        ('keyword?', KeywordP()),
         ('vector?', VectorP()),
         ('map?', MapP()),
         ('list?', ListP()),
