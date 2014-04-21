@@ -30,7 +30,7 @@ def str_unquote(s):
 class QuoppaParser(PackratParser):
     r"""
     SYMBOL:
-        c = `[\+\-\*\^\?a-zA-Z!<=>_~/$%&:][\+\-\*\^\?a-zA-Z0-9!<=>_~/$%&:.]*`
+        c = `[\+\-\*\^\?a-zA-Z!<=>_~/$%&:][#\+\-\*\^\?a-zA-Z0-9!<=>_~/$%&:.]*`
         IGNORE*
         return {W_Sym(c)};
 
