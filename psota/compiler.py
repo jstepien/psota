@@ -152,7 +152,7 @@ def emit_list(st, bindings, node, recur_bindings):
             return body_code
         elif head == "quote":
             return emit_quote(st, bindings, list_w[1])
-        elif head == "`":
+        elif head == "qquote*":
             return emit_quasiquote(st, bindings, list_w[1])
         elif head == "fn*":
             return fn(st, bindings, list_w)

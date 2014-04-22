@@ -2,6 +2,9 @@
   [& args]
   (cons 'defmacro* args))
 
+(defmacro qquote [& args]
+  (cons 'qquote* args))
+
 (def* gensym (fn* [] (gensym* "G__")))
 
 (defmacro fn
@@ -188,6 +191,27 @@
   (cond (vector? xs) (vec (concat xs [x]))
         (map? xs) (assoc xs (first x) (second x))
         :else (cons x xs)))
+
+(defn into [base addends]
+  (reduce conj base addends))
+
+(defmacro qquote [& args]
+  (let [f (fn rdr [obj]
+            (let [drop-hash (fn [] (reduce str "" (butlast (str obj))))
+                  sym (fn []
+                        (if (= (first "#") (last (str obj)))
+                          (gensym (str (drop-hash) "__"))
+                          obj))
+                  lst (fn []
+                        (if (= '~ (first obj))
+                          obj
+                          (apply list (map rdr obj))))]
+              (cond (symbol? obj) (sym)
+                    (vector? obj) (vec (map rdr obj))
+                    (list? obj)   (lst)
+                    (map? obj)    (into {} (map (partial map rdr) obj))
+                    :else obj)))]
+    (cons 'qquote* (f args))))
 
 (defmacro ->
   [x & ops]
@@ -509,7 +533,3 @@
   (if (vector? coll)
     (butlast coll)
     (next coll)))
-
-(defn into [base addends]
-  (reduce conj base addends))
-

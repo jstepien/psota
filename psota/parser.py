@@ -132,7 +132,7 @@ def quote(sexpr):
     return wrap([W_Sym('quote'), sexpr])
 
 def quasiquote(sexpr):
-    return wrap([W_Sym('`'), sexpr])
+    return wrap([W_Sym('qquote'), sexpr])
 
 def unquote(sexpr):
     return wrap([W_Sym('~'), sexpr])
