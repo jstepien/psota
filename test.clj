@@ -42,4 +42,5 @@
   (= {} (dissoc {:a 1} :a))
 
   ;; quasi quoting
+  (eval `(= 'a# 'a#))
   (not (= `a# `a#)))

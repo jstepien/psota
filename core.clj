@@ -196,11 +196,18 @@
   (reduce conj base addends))
 
 (defmacro qquote [& args]
-  (let [f (fn rdr [obj]
+  (let [gensyms (atom {})
+        f (fn rdr [obj]
             (let [drop-hash (fn [] (reduce str "" (butlast (str obj))))
                   sym (fn []
                         (if (= (first "#") (last (str obj)))
-                          (gensym (str (drop-hash) "__"))
+                          (let [found (get (deref gensyms) obj)]
+                            (if found
+                              found
+                              (let [gen (gensym (str (drop-hash) "__"))]
+                                (swap! gensyms
+                                       (fn [m] (assoc m obj gen)))
+                                gen)))
                           obj))
                   lst (fn []
                         (if (= '~ (first obj))
