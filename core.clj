@@ -540,3 +540,9 @@
   (if (vector? coll)
     (butlast coll)
     (next coll)))
+
+(defmacro when-let
+  [bindings & exprs]
+  `(let ~bindings
+     (when ~(first bindings)
+       ~(cons 'do exprs))))
