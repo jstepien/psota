@@ -546,3 +546,5 @@
   `(let ~bindings
      (when ~(first bindings)
        ~(cons 'do exprs))))
+
+(load "for.clj")

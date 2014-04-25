@@ -41,6 +41,9 @@
   (= 3 (get {:a 1 :b 2} :c 3))
   (= {} (dissoc {:a 1} :a))
 
+  ;; for
+  (= [0 1 2 3] (for [x (range 4)] x))
+
   ;; quasi quoting
   (eval `(= 'a# 'a#))
   (not (= `a# `a#)))
