@@ -42,7 +42,8 @@
   (= {} (dissoc {:a 1} :a))
 
   ;; for
-  (= [0 1 2 3] (for [x (range 4)] x))
+  (= [[0 0] [0 1] [1 0] [1 1] [2 0] [2 1] [3 0] [3 1]]
+     (for [x (range 4) y (range 2)] [x y]))
 
   ;; quasi quoting
   (eval `(= 'a# 'a#))

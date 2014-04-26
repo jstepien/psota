@@ -547,4 +547,10 @@
      (when ~(first bindings)
        ~(cons 'do exprs))))
 
+(defmacro when-first
+  [[sym coll] & exprs]
+  `(let [~sym (first ~coll)]
+     (when ~sym
+       ~(cons 'do exprs))))
+
 (load "for.clj")
