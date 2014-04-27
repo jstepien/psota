@@ -78,6 +78,11 @@
               (cons (rest (rest bindings))
                     body)))))
 
+(let [old-swap swap!]
+  (defn swap! [atom fun & args]
+    ;; FIXME: apply should have variable arity.
+    (old-swap atom (fn [val] (apply fun (cons val args))))))
+
 (defmacro cond*
   [pairs]
   (let [condition (first pairs)
@@ -195,18 +200,22 @@
 (defn into [base addends]
   (reduce conj base addends))
 
+(defn subs [s start end]
+  (reduce str "" (take (- end start) (drop start s))))
+
 (defmacro qquote [& args]
   (let [gensyms (atom {})
         f (fn rdr [obj]
-            (let [drop-hash (fn [] (reduce str "" (butlast (str obj))))
+            (let [drop-hash (fn []
+                              (let [s (str obj)]
+                                (subs s 0 (- (count s) 1))))
                   sym (fn []
                         (if (= (first "#") (last (str obj)))
                           (let [found (get (deref gensyms) obj)]
                             (if found
                               found
-                              (let [gen (gensym (str (drop-hash) "__"))]
-                                (swap! gensyms
-                                       (fn [m] (assoc m obj gen)))
+                              (let [gen (gensym)]
+                                (swap! gensyms assoc obj gen)
                                 gen)))
                           obj))
                   lst (fn []
