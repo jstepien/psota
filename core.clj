@@ -317,13 +317,12 @@
 (defmacro fn-with-single-arity
   [& args]
   (if (symbol? (first args))
-    (let* storage (gensym)
-      `(let [~storage (atom nil)
-             ~(first args) (fn* [& args]
-                             (apply (deref ~storage) args))]
-         (swap! ~storage
-                (fn* [_]
-                  ~(cons 'fn-destructure (rest args))))))
+    `(let [storage# (atom nil)
+           ~(first args) (fn* [& args]
+                           (apply (deref storage#) args))]
+       (swap! storage#
+              (fn* [_]
+                ~(cons 'fn-destructure (rest args)))))
     (cons 'fn-destructure args)))
 
 (defn zipmap
@@ -346,13 +345,12 @@
     (if (= 1 (count args))
       (cons 'fn (first args))
       (let [arities (map (comp count first) args)
-            fns (map (fn [tail] (cons 'fn tail)) args)
-            variants (gensym)]
-        `(let [~variants ~(zipmap arities fns)]
+            fns (map (fn [tail] (cons 'fn tail)) args)]
+        `(let [variants# ~(zipmap arities fns)]
            (fn-with-single-arity
              [& coll]
              (let [nargs (count coll)
-                   f (get ~variants nargs)]
+                   f (get variants# nargs)]
                (if f
                  (apply f coll)
                  (throw (str "Incorrect arity: " nargs))))))))
