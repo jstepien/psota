@@ -548,6 +548,11 @@
     (butlast coll)
     (next coll)))
 
+(defn peek [coll]
+  (if (vector? coll)
+    (last coll)
+    (first coll)))
+
 (defmacro when-let
   [bindings & exprs]
   `(let ~bindings
