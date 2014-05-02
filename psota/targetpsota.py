@@ -4,6 +4,7 @@ import parser
 import compiler
 import symbol_table
 import builtins
+from bindings import Bindings
 
 def entry_point(argv):
     f = open(argv[1])
@@ -11,7 +12,7 @@ def entry_point(argv):
     f.close()
     parsed = parser.parse(input)
     st = symbol_table.SymbolTable()
-    bindings = eval.Bindings(st)
+    bindings = Bindings(st)
     value = None
     for sexp in parsed:
         code = compiler.emit(st, bindings, sexp)
