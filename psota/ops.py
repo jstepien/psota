@@ -1,0 +1,20 @@
+"Op codes of the virtual machine."
+(
+        KEYWORD,
+        IF,
+        PUSH_ENV,
+        POP_ENV,
+        SYM,
+        INT,
+        QUOTE,
+        RELJMP,
+        FN,
+        INVOKE,
+        DEF,
+        PUSH,
+        APPLY,
+        RECUR,
+        STRING,
+        TRY,
+        CHAR,
+        ) = range(17)

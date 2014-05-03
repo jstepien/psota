@@ -2,6 +2,7 @@ from rpython.rlib import jit
 
 import space
 import builtins
+import ops
 
 @jit.elidable
 def _get_index(indices, key, version):
@@ -66,26 +67,6 @@ def base_env(st):
     return Env(inits=[(st.get_sym_id(sym), val)
                       for (sym, val) in builtins.consts])
 
-(
-        OP_KEYWORD,
-        OP_IF,
-        OP_PUSH_ENV,
-        OP_POP_ENV,
-        OP_SYM,
-        OP_INT,
-        OP_QUOTE,
-        OP_RELJMP,
-        OP_FN,
-        OP_INVOKE,
-        OP_DEF,
-        OP_PUSH,
-        OP_APPLY,
-        OP_RECUR,
-        OP_STRING,
-        OP_TRY,
-        OP_CHAR,
-        ) = range(17)
-
 @jit.elidable
 def lookup_in_bindings(bindings, version, sym_id):
     return bindings.get(sym_id)
@@ -105,35 +86,34 @@ def is_true(obj):
     return not(obj == space.w_nil or obj == space.w_false)
 
 ops_names = {
-        OP_KEYWORD: 'KEYWORD',
-        OP_IF: 'IF',
-        OP_PUSH_ENV: 'PUSH_ENV',
-        OP_POP_ENV: 'POP_ENV',
-        OP_SYM: 'SYM',
-        OP_INT: 'INT',
-        OP_QUOTE: 'QUOTE',
-        OP_RELJMP: 'RELJMP',
-        OP_FN: 'FN',
-        OP_INVOKE: 'INVOKE',
-        OP_DEF: 'DEF',
-        OP_PUSH: 'PUSH',
-        OP_APPLY: 'APPLY',
-        OP_RECUR: 'RECUR',
-        OP_STRING: 'STRING',
-        OP_TRY: 'TRY',
+        ops.KEYWORD: 'KEYWORD',
+        ops.IF: 'IF',
+        ops.PUSH_ENV: 'PUSH_ENV',
+        ops.POP_ENV: 'POP_ENV',
+        ops.SYM: 'SYM',
+        ops.INT: 'INT',
+        ops.QUOTE: 'QUOTE',
+        ops.RELJMP: 'RELJMP',
+        ops.FN: 'FN',
+        ops.INVOKE: 'INVOKE',
+        ops.DEF: 'DEF',
+        ops.PUSH: 'PUSH',
+        ops.APPLY: 'APPLY',
+        ops.RECUR: 'RECUR',
+        ops.STRING: 'STRING',
+        ops.TRY: 'TRY',
         }
 
-def code_to_str(code):
-    val = ""
-    for op in code:
-        if op in ops_names:
-            val += ops_names[op]
-        else:
-            val += str(op)
-        val += " "
-    return val
-
 def get_location(ip, code):
+    def code_to_str(code):
+        val = ""
+        for op in code:
+            if op in ops_names:
+                val += ops_names[op]
+            else:
+                val += str(op)
+            val += " "
+        return val
     assert ip >= 0
     before = code_to_str(code[max(ip - 5, 0) : ip])
     after = code_to_str(code[ip + 1 : ip + 6])
@@ -282,44 +262,44 @@ def eval(env, bindings, st, code):
         assert r1 is not None
         assert sp >= 0
         op = get_op(code, ip)
-        if op == OP_IF:
+        if op == ops.IF:
             ip += 1
             if not is_true(r1):
                 ip += get_op(code, ip)
-        elif op == OP_SYM:
+        elif op == ops.SYM:
             ip += 1
             r1 = lookup(env, jit.promote(bindings), get_op(code, ip))
-        elif op == OP_KEYWORD:
+        elif op == ops.KEYWORD:
             ip += 1
             r1 = space.W_Keyword(st.get_sym(get_op(code, ip)))
-        elif op == OP_STRING:
+        elif op == ops.STRING:
             ip += 1
             r1 = space.W_String(st.get_sym(get_op(code, ip)))
-        elif op == OP_INT:
+        elif op == ops.INT:
             ip += 1
             r1 = space.W_Int(get_op(code, ip))
-        elif op == OP_PUSH_ENV:
+        elif op == ops.PUSH_ENV:
             ip += 1
             env = Env([(get_op(code, ip), r1)], env)
-        elif op == OP_POP_ENV:
+        elif op == ops.POP_ENV:
             env = env.parent
-        elif op == OP_QUOTE:
+        elif op == ops.QUOTE:
             ip += 1
             r1 = space.W_Sym(st.get_sym(get_op(code, ip)))
-        elif op == OP_RELJMP:
+        elif op == ops.RELJMP:
             ip += get_op(code, ip + 1) + 1
-        elif op == OP_FN:
+        elif op == ops.FN:
             ip += 1
             r1 = st.get_fn(get_op(code, ip)).with_env(env)
-        elif op == OP_PUSH:
+        elif op == ops.PUSH:
             if stack is empty_stack:
                 stack = [None for _ in range(stack_size)]
             stack[jit.promote(sp)] = r1
             sp += 1
-        elif op == OP_DEF:
+        elif op == ops.DEF:
             ip += 1
             bindings.set(get_op(code, ip), r1)
-        elif op == OP_RECUR:
+        elif op == ops.RECUR:
             ip += 1
             argc = jit.promote(get_op(code, ip))
             sp -= argc
@@ -329,15 +309,15 @@ def eval(env, bindings, st, code):
                 env.set(get_op(code, ip), stack[jit.promote(idx + sp)])
                 idx -= 1
             ip = -1
-        elif op == OP_INVOKE:
+        elif op == ops.INVOKE:
             r1 = invoke(ip, env, code, r1, stack, sp, bindings)
             ip += 1
             sp -= get_op(code, ip)
-        elif op == OP_APPLY:
+        elif op == ops.APPLY:
             r1 = apply(ip, env, code, r1, stack, sp, bindings)
             ip += 1
             sp -= 2
-        elif op == OP_TRY:
+        elif op == ops.TRY:
             try:
                 assert isinstance(r1, space.W_Fun)
                 r1 = eval(env, bindings, bindings.st, r1.code)
@@ -348,7 +328,7 @@ def eval(env, bindings, st, code):
                 stack[jit.promote(sp)] = space.wrap(ex.reason())
                 sp += 1
                 ip += 1
-        elif op == OP_CHAR:
+        elif op == ops.CHAR:
             ip += 1
             r1 = space.W_Char(get_op(code, ip))
         else:

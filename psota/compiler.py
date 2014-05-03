@@ -1,7 +1,5 @@
 import eval
-from eval import (OP_KEYWORD, OP_IF, OP_SYM, OP_QUOTE, OP_RELJMP, OP_PUSH, OP_FN,
-        OP_RECUR, OP_INVOKE, OP_DEF, OP_INT, OP_PUSH_ENV, OP_POP_ENV, OP_APPLY,
-        OP_STRING, OP_TRY, OP_CHAR)
+import ops
 from space import (W_List, W_Int, W_EmptyList, W_Vector, W_Sym, W_Fun, unwrap,
         W_Seq, W_ArrayMap, W_Keyword, w_nil, W_String, CompilationException,
         W_Char, cast)
@@ -43,8 +41,8 @@ def defmacro(st, bindings, list_w):
 def expand_macro(st, bindings, macro_id, args_w, recur_bindings):
     args_code = []
     for w_arg in args_w:
-        args_code += emit_quote(st, bindings, w_arg) + [OP_PUSH]
-    expanding_code = [OP_FN, macro_id, OP_INVOKE, len(args_w)]
+        args_code += emit_quote(st, bindings, w_arg) + [ops.PUSH]
+    expanding_code = [ops.FN, macro_id, ops.INVOKE, len(args_w)]
     all_code = args_code + expanding_code
     value = eval.eval(eval.base_env(st), bindings, st, all_code)
     return emit(st, bindings, value, recur_bindings)
@@ -52,43 +50,43 @@ def expand_macro(st, bindings, macro_id, args_w, recur_bindings):
 def fn(st, bindings, list_w):
     _, w_args = list_w[0:2]
     fn_id = mkfn(st, bindings, w_args, list_w[2:])
-    return [OP_FN, fn_id]
+    return [ops.FN, fn_id]
 
 def try_block(st, bindings, list_w):
     _, w_body, w_catch = list_w
     fn_code = fn(st, bindings, unwrap(w_body))
     catch_code = fn(st, bindings, unwrap(w_catch))
-    return fn_code + [OP_TRY, 3 + len(catch_code)] + catch_code + [OP_INVOKE, 1]
+    return fn_code + [ops.TRY, 3 + len(catch_code)] + catch_code + [ops.INVOKE, 1]
 
 def somehow_quoted_emit(list_handling_fn):
     def f(st, bindings, w_val):
         if isinstance(w_val, W_Sym):
             id = st.add_sym(w_val.val)
-            return [OP_QUOTE, id]
+            return [ops.QUOTE, id]
         elif isinstance(w_val, W_Keyword):
             id = st.add_sym(w_val.val)
-            return [OP_KEYWORD, id]
+            return [ops.KEYWORD, id]
         elif isinstance(w_val, W_String):
             id = st.add_sym(w_val.val)
-            return [OP_STRING, id]
+            return [ops.STRING, id]
         elif isinstance(w_val, W_Int):
-            return [OP_INT, w_val.val]
+            return [ops.INT, w_val.val]
         elif isinstance(w_val, W_List):
             return list_handling_fn(st, bindings, w_val, f)
         elif isinstance(w_val, W_Vector):
             code = []
             for w_elem in w_val.elems():
-                code += f(st, bindings, w_elem) + [OP_PUSH]
-            return code + [OP_SYM, st.add_sym("vector"),
-                    OP_INVOKE, len(w_val.elems())]
+                code += f(st, bindings, w_elem) + [ops.PUSH]
+            return code + [ops.SYM, st.add_sym("vector"),
+                    ops.INVOKE, len(w_val.elems())]
         elif isinstance(w_val, W_ArrayMap):
             code = []
             for w_elem in w_val.elems():
-                code += f(st, bindings, w_elem) + [OP_PUSH]
-            return code + [OP_SYM, st.add_sym("array-map"),
-                    OP_INVOKE, len(w_val.elems())]
+                code += f(st, bindings, w_elem) + [ops.PUSH]
+            return code + [ops.SYM, st.add_sym("array-map"),
+                    ops.INVOKE, len(w_val.elems())]
         elif w_val == w_nil:
-            return [OP_SYM, st.get_sym_id("nil")]
+            return [ops.SYM, st.get_sym_id("nil")]
         else:
             raise Exception("how do i quasiquote? %s" % w_val)
     return f
@@ -108,8 +106,8 @@ def emit_quasiquoted_list(st, bindings, w_val, recur):
         code = []
         list = unwrap(w_val)
         for w_elem in list:
-            code += recur(st, bindings, w_elem) + [OP_PUSH]
-        return code + [OP_SYM, st.add_sym("list"), OP_INVOKE, len(list)]
+            code += recur(st, bindings, w_elem) + [ops.PUSH]
+        return code + [ops.SYM, st.add_sym("list"), ops.INVOKE, len(list)]
 
 emit_quasiquote = somehow_quoted_emit(emit_quasiquoted_list)
 
@@ -117,15 +115,15 @@ def emit_quoted_list(st, bindings, w_val, recur):
     code = []
     list = unwrap(w_val)
     for w_elem in list:
-        code += recur(st, bindings, w_elem) + [OP_PUSH]
-    return code + [OP_SYM, st.add_sym("list"), OP_INVOKE, len(list)]
+        code += recur(st, bindings, w_elem) + [ops.PUSH]
+    return code + [ops.SYM, st.add_sym("list"), ops.INVOKE, len(list)]
 
 emit_quote = somehow_quoted_emit(emit_quoted_list)
 
 def emit_list(st, bindings, node, recur_bindings):
     list_w = unwrap(node)
     if len(list_w) == 0:
-        return [OP_SYM, st.add_sym("list"), OP_INVOKE, 0]
+        return [ops.SYM, st.add_sym("list"), ops.INVOKE, 0]
     w_head = list_w[0]
     args_w = list_w[1:]
     if isinstance(w_head, W_Sym):
@@ -134,8 +132,8 @@ def emit_list(st, bindings, node, recur_bindings):
             cond_code = emit(st, bindings, list_w[1])
             true_code = emit(st, bindings, list_w[2], recur_bindings)
             false_code = emit(st, bindings, list_w[3], recur_bindings)
-            jmp_code = [OP_RELJMP, len(false_code)]
-            code = (cond_code + [OP_IF, len(true_code) + len(jmp_code)] +
+            jmp_code = [ops.RELJMP, len(false_code)]
+            code = (cond_code + [ops.IF, len(true_code) + len(jmp_code)] +
                     true_code + jmp_code + false_code)
             return code
         elif head == "let*":
@@ -143,7 +141,7 @@ def emit_list(st, bindings, node, recur_bindings):
             binding_code = emit(st, bindings, list_w[2])
             id = st.add_sym(sym.val)
             inner_code = emit(st, bindings, list_w[3], recur_bindings)
-            code = binding_code + [OP_PUSH_ENV, id] + inner_code + [OP_POP_ENV]
+            code = binding_code + [ops.PUSH_ENV, id] + inner_code + [ops.POP_ENV]
             return code
         elif head == "do":
             body_code = []
@@ -162,7 +160,7 @@ def emit_list(st, bindings, node, recur_bindings):
             var_sym = cast(list_w[1], W_Sym)
             id = st.add_sym(var_sym.val)
             val_code = emit(st, bindings, list_w[2])
-            return val_code + [OP_DEF, id]
+            return val_code + [ops.DEF, id]
         elif head == "try*":
             return try_block(st, bindings, list_w)
         elif head == "recur":
@@ -170,27 +168,27 @@ def emit_list(st, bindings, node, recur_bindings):
             args_code = []
             for arg in args:
                 c = emit(st, bindings, arg)
-                args_code += c + [OP_PUSH]
+                args_code += c + [ops.PUSH]
             if recur_bindings == no_recur_bindings:
                 raise CompilationException("Not a recur point :o")
             (ids, rest_id) = recur_bindings
             bindings_ids = [x for x in reversed(ids)] + \
                     [-rest_id if rest_id >= 0 else -1]
-            return args_code + [OP_RECUR, len(args)] + bindings_ids
+            return args_code + [ops.RECUR, len(args)] + bindings_ids
         elif st.has_macro(head):
             return expand_macro(st, bindings, st.get_macro(head), list_w[1:], recur_bindings)
         elif head == "apply":
             args_code = []
             for arg in args_w:
                 c = emit(st, bindings, arg)
-                args_code += c + [OP_PUSH]
-            return args_code + [OP_APPLY, len(args_w)]
+                args_code += c + [ops.PUSH]
+            return args_code + [ops.APPLY, len(args_w)]
     args_code = []
     for arg in args_w:
         c = emit(st, bindings, arg)
-        args_code += c + [OP_PUSH]
+        args_code += c + [ops.PUSH]
     fn_code = emit(st, bindings, w_head)
-    return args_code + fn_code + [OP_INVOKE, len(args_w)]
+    return args_code + fn_code + [ops.INVOKE, len(args_w)]
 
 no_recur_bindings = ([], -1)
 empty_recur_bindings = ([], -2)
@@ -202,31 +200,31 @@ def emit(st, bindings, node, recur_bindings=no_recur_bindings):
             raise Exception("Shouldn't see '~' here!")
         if not sym in st.syms:
             raise CompilationException("Undefined symbol: %s" % str(sym))
-        return [OP_SYM, st.get_sym_id(sym)]
+        return [ops.SYM, st.get_sym_id(sym)]
     elif isinstance(node, W_Keyword):
         sym = node.val
         id = st.add_sym(sym)
-        return [OP_KEYWORD, id]
+        return [ops.KEYWORD, id]
     elif isinstance(node, W_String):
         id = st.add_sym(node.val)
-        return [OP_STRING, id]
+        return [ops.STRING, id]
     elif isinstance(node, W_Int):
-        return [OP_INT, node.val]
+        return [ops.INT, node.val]
     elif isinstance(node, W_Char):
-        return [OP_CHAR, node.val]
+        return [ops.CHAR, node.val]
     elif isinstance(node, W_List):
         return emit_list(st, bindings, node, recur_bindings)
     elif isinstance(node, W_Vector):
         code = []
         for w_elem in node.elems():
-            code += emit(st, bindings, w_elem) + [OP_PUSH]
-        return code + [OP_SYM, st.add_sym("vector"), OP_INVOKE, len(node.elems())]
+            code += emit(st, bindings, w_elem) + [ops.PUSH]
+        return code + [ops.SYM, st.add_sym("vector"), ops.INVOKE, len(node.elems())]
     elif isinstance(node, W_ArrayMap):
         code = []
         for w_elem in node.elems():
-            code += emit(st, bindings, w_elem) + [OP_PUSH]
-        return code + [OP_SYM, st.add_sym("array-map"), OP_INVOKE, len(node.elems())]
+            code += emit(st, bindings, w_elem) + [ops.PUSH]
+        return code + [ops.SYM, st.add_sym("array-map"), ops.INVOKE, len(node.elems())]
     elif node == w_nil:
-        return [OP_SYM, st.get_sym_id("nil")]
+        return [ops.SYM, st.get_sym_id("nil")]
     else:
         raise Exception("How to emit? %s" % node)
