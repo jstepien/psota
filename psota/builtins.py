@@ -151,8 +151,9 @@ class Eval(space.W_BIF):
         from compiler import emit
         w_form = args[0]
         st = bindings.st
-        code = emit(st, bindings, w_form)
-        value = eval.eval(eval.base_env(st), bindings, st, code)
+        ctx = eval.Context(st, bindings)
+        code = emit(ctx, w_form)
+        value = ctx.run(code)
         return value
 
 class ReadString(space.W_BIF):
@@ -288,12 +289,13 @@ class Load(space.W_BIF):
         w_str = space.cast(args[0], space.W_String)
         f = open(w_str.val)
         try:
-            st = bindings.st
             input = f.read()
             parsed = parse(input)
+            st = bindings.st
+            ctx = eval.Context(st, bindings)
             for sexp in parsed:
-                code = emit(st, bindings, sexp)
-                eval.eval(eval.base_env(st), bindings, st, code)
+                code = emit(ctx, sexp)
+                ctx.run(code)
         finally:
             f.close()
 

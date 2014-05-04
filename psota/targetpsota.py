@@ -2,21 +2,18 @@ import eval
 import sys
 import parser
 import compiler
-import symbol_table
 import builtins
-from bindings import Bindings
 
 def entry_point(argv):
     f = open(argv[1])
     input = f.read()
     f.close()
     parsed = parser.parse(input)
-    st = symbol_table.SymbolTable()
-    bindings = Bindings(st)
+    ctx = eval.Context()
     value = None
     for sexp in parsed:
-        code = compiler.emit(st, bindings, sexp)
-        value = eval.eval(eval.base_env(st), bindings, st, code)
+        code = compiler.emit(ctx, sexp)
+        value = ctx.run(code)
     return 0
 
 def target(driver, args):

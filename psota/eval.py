@@ -3,6 +3,8 @@ from rpython.rlib import jit
 import space
 import builtins
 import ops
+from symbol_table import SymbolTable
+from bindings import Bindings
 
 @jit.elidable
 def _get_index(indices, key, version):
@@ -84,6 +86,26 @@ def lookup(env, bindings, sym_id):
 @jit.elidable
 def is_true(obj):
     return not(obj == space.w_nil or obj == space.w_false)
+
+class Context:
+    def __init__(self, st=None, bindings=None):
+        if st is None:
+            self._st = SymbolTable()
+        else:
+            self._st = st
+        if bindings is None:
+            self._bindings = Bindings(self._st)
+        else:
+            self._bindings = bindings
+
+    def st(self):
+        return self._st
+
+    def bindings(self):
+        return self._bindings
+
+    def run(self, code):
+        return eval(base_env(self._st), self._bindings, self._st, code)
 
 ops_names = {
         ops.KEYWORD: 'KEYWORD',
