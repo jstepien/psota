@@ -74,10 +74,9 @@ class Gensym(space.W_BIF):
         self.counter = 0
 
     @arity(1)
-    def invoke(self, args, bindings, *_):
-        assert bindings is not None
+    def invoke(self, args, ctx):
         val = args[0].to_str() + str(self.counter)
-        bindings.st.add_sym(val)
+        ctx.st().add_sym(val)
         self.counter += 1
         return space.W_Sym(val)
 
@@ -124,41 +123,39 @@ class WithMeta(space.W_BIF):
 
 class AlterMeta(space.W_BIF):
     @arity(2)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_var = space.cast(args[0], space.W_Var)
         w_fn = space.cast(args[1], space.W_Fun)
-        w_meta = eval.invoke_fn(w_fn, [w_var.meta()], bindings)
+        w_meta = eval.invoke_fn(w_fn, [w_var.meta()], ctx)
         w_var.set_meta(w_meta)
 
 class Var(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_arg = space.cast(args[0], space.W_Sym)
-        return bindings.get_var(w_arg.val)
+        return ctx.bindings().get_var(w_arg.val)
 
 class AlterVarRoot(space.W_BIF):
     @arity(2)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_var = space.cast(args[0], space.W_Var)
         w_fn = space.cast(args[1], space.W_Fun)
-        w_new = eval.invoke_fn(w_fn, [w_var.w_val], bindings)
-        bindings.alter_var(w_var, w_new)
+        w_new = eval.invoke_fn(w_fn, [w_var.w_val], ctx)
+        ctx.bindings().alter_var(w_var, w_new)
         return w_new
 
 class Eval(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         from compiler import emit
         w_form = args[0]
-        st = bindings.st
-        ctx = eval.Context(st, bindings)
         code = emit(ctx, w_form)
         value = ctx.run(code)
         return value
 
 class ReadString(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_str = space.cast(args[0], space.W_String)
         from parser import parse
         parsed = parse(w_str.val)
@@ -168,23 +165,23 @@ class ReadString(space.W_BIF):
 
 class Class(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         return args[0].type()
 
 class LazySeq(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_fn = space.cast(args[0], space.W_Fun)
-        pr = LazySeq.Promise(w_fn, bindings)
+        pr = LazySeq.Promise(w_fn, ctx)
         return space.W_LazySeq(pr)
 
     class Promise:
-        def __init__(self, w_fn, bindings):
+        def __init__(self, w_fn, ctx):
             self.w_fn = w_fn
-            self.bindings = bindings
+            self.ctx = ctx
 
         def deliver(self):
-            return eval.invoke_fn(self.w_fn, [], self.bindings)
+            return eval.invoke_fn(self.w_fn, [], self.ctx)
 
 def type_predicate(type):
     @arity(1)
@@ -222,10 +219,10 @@ class Atom(space.W_BIF):
 
 class SwapBang(space.W_BIF):
     @arity(2)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_atom = space.cast(args[0], space.W_Atom)
         w_fn = space.cast(args[1], space.W_Fun)
-        w_new = eval.invoke_fn(w_fn, [w_atom.deref()], bindings)
+        w_new = eval.invoke_fn(w_fn, [w_atom.deref()], ctx)
         w_atom.reset(w_new)
         return w_new
 
@@ -277,13 +274,13 @@ class Throw(space.W_BIF):
 
 class InNs(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         w_obj = space.cast(args[0], space.W_Sym)
-        bindings.set_ns(w_obj.val)
+        ctx.bindings().set_ns(w_obj.val)
 
 class Load(space.W_BIF):
     @arity(1)
-    def invoke(self, args, bindings, *_):
+    def invoke(self, args, ctx):
         from parser import parse
         from compiler import emit
         w_str = space.cast(args[0], space.W_String)
@@ -291,8 +288,6 @@ class Load(space.W_BIF):
         try:
             input = f.read()
             parsed = parse(input)
-            st = bindings.st
-            ctx = eval.Context(st, bindings)
             for sexp in parsed:
                 code = emit(ctx, sexp)
                 ctx.run(code)

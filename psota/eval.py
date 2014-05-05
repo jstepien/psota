@@ -105,7 +105,7 @@ class Context:
         return self._bindings
 
     def run(self, code):
-        return eval(base_env(self._st), self._bindings, self._st, code)
+        return eval(self, base_env(self._st), code)
 
 ops_names = {
         ops.KEYWORD: 'KEYWORD',
@@ -144,11 +144,11 @@ def get_location(ip, code):
 
 jitdriver = jit.JitDriver(
         greens=["ip", "code"],
-        reds=["sp", "stack", "bindings", "r1", "st", "env"],
+        reds=["sp", "stack", "ctx", "r1", "env"],
         get_printable_location=get_location,
         )
 
-def invoke_fn(w_fn, args_w, bindings):
+def invoke_fn(w_fn, args_w, ctx):
     w_fn = space.cast(w_fn, space.W_Fun)
     inits = []
     argc = len(args_w)
@@ -165,10 +165,10 @@ def invoke_fn(w_fn, args_w, bindings):
     for arg_id in reversed(w_fn.arg_ids):
         env.set(arg_id, args[idx])
         idx += 1
-    return eval(env, bindings, bindings.st, w_fn.code)
+    return eval(ctx, env, w_fn.code)
 
 @jit.unroll_safe
-def invoke(ip, env, code, r1, stack, sp, bindings):
+def invoke(ip, env, code, r1, stack, sp, ctx):
     ip += 1
     sp = jit.promote(sp)
     argc = jit.promote(get_op(code, ip))
@@ -200,7 +200,7 @@ def invoke(ip, env, code, r1, stack, sp, bindings):
             for arg_id in fn.arg_ids:
                 new_env.set(arg_id, stack[jit.promote(idx + sp)])
                 idx += 1
-            return eval(new_env, bindings, bindings.st, fn.code)
+            return eval(ctx, new_env, fn.code)
         finally:
             new_env.mark_free()
     else:
@@ -209,13 +209,13 @@ def invoke(ip, env, code, r1, stack, sp, bindings):
         args = [space.w_nil for _ in range(argc)]
         for i in range(new_sp, sp):
             args[i - new_sp] = stack[i]
-        ret = fn.invoke(args, bindings)
+        ret = fn.invoke(args, ctx)
         if ret is None:
             ret = space.w_nil
         return ret
 
 @jit.unroll_safe
-def apply(ip, env, code, r1, stack, sp, bindings):
+def apply(ip, env, code, r1, stack, sp, ctx):
     ip += 1
     assert code[ip] == 2
     new_sp = sp - 2
@@ -245,11 +245,11 @@ def apply(ip, env, code, r1, stack, sp, bindings):
             for arg_id in fn.arg_ids:
                 new_env.set(arg_id, args[idx])
                 idx += 1
-            return eval(new_env, bindings, bindings.st, fn.code)
+            return eval(ctx, new_env, fn.code)
         finally:
             new_env.mark_free()
     else:
-        ret = fn.invoke(args, bindings)
+        ret = fn.invoke(args, ctx)
         if ret is None:
             ret = space.w_nil
         return ret
@@ -265,7 +265,7 @@ def const_len(code):
 stack_size = 100
 empty_stack = []
 
-def eval(env, bindings, st, code):
+def eval(ctx, env, code):
     ip = 0
     stack = empty_stack
     sp = 0
@@ -275,9 +275,8 @@ def eval(env, bindings, st, code):
                 ip=ip,
                 sp=sp,
                 stack=stack,
-                st=st,
+                ctx=ctx,
                 env=env,
-                bindings=bindings,
                 code=code,
                 r1=r1,
                 )
@@ -290,13 +289,13 @@ def eval(env, bindings, st, code):
                 ip += get_op(code, ip)
         elif op == ops.SYM:
             ip += 1
-            r1 = lookup(env, jit.promote(bindings), get_op(code, ip))
+            r1 = lookup(env, jit.promote(ctx.bindings()), get_op(code, ip))
         elif op == ops.KEYWORD:
             ip += 1
-            r1 = space.W_Keyword(st.get_sym(get_op(code, ip)))
+            r1 = space.W_Keyword(ctx.st().get_sym(get_op(code, ip)))
         elif op == ops.STRING:
             ip += 1
-            r1 = space.W_String(st.get_sym(get_op(code, ip)))
+            r1 = space.W_String(ctx.st().get_sym(get_op(code, ip)))
         elif op == ops.INT:
             ip += 1
             r1 = space.W_Int(get_op(code, ip))
@@ -307,12 +306,12 @@ def eval(env, bindings, st, code):
             env = env.parent
         elif op == ops.QUOTE:
             ip += 1
-            r1 = space.W_Sym(st.get_sym(get_op(code, ip)))
+            r1 = space.W_Sym(ctx.st().get_sym(get_op(code, ip)))
         elif op == ops.RELJMP:
             ip += get_op(code, ip + 1) + 1
         elif op == ops.FN:
             ip += 1
-            r1 = st.get_fn(get_op(code, ip)).with_env(env)
+            r1 = ctx.st().get_fn(get_op(code, ip)).with_env(env)
         elif op == ops.PUSH:
             if stack is empty_stack:
                 stack = [None for _ in range(stack_size)]
@@ -320,7 +319,7 @@ def eval(env, bindings, st, code):
             sp += 1
         elif op == ops.DEF:
             ip += 1
-            bindings.set(get_op(code, ip), r1)
+            ctx.bindings().set(get_op(code, ip), r1)
         elif op == ops.RECUR:
             ip += 1
             argc = jit.promote(get_op(code, ip))
@@ -332,17 +331,17 @@ def eval(env, bindings, st, code):
                 idx -= 1
             ip = -1
         elif op == ops.INVOKE:
-            r1 = invoke(ip, env, code, r1, stack, sp, bindings)
+            r1 = invoke(ip, env, code, r1, stack, sp, ctx)
             ip += 1
             sp -= get_op(code, ip)
         elif op == ops.APPLY:
-            r1 = apply(ip, env, code, r1, stack, sp, bindings)
+            r1 = apply(ip, env, code, r1, stack, sp, ctx)
             ip += 1
             sp -= 2
         elif op == ops.TRY:
             try:
                 assert isinstance(r1, space.W_Fun)
-                r1 = eval(env, bindings, bindings.st, r1.code)
+                r1 = eval(ctx, env, r1.code)
                 ip += code[ip + 1]
             except space.SpaceException as ex:
                 if stack is empty_stack:
