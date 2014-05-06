@@ -82,11 +82,6 @@ def lookup(env, bindings, sym_id):
                 bindings.st.get_sym(sym_id))
     return val
 
-
-@jit.elidable
-def is_true(obj):
-    return not(obj == space.w_nil or obj == space.w_false)
-
 class Context:
     def __init__(self, st=None, bindings=None):
         if st is None:
@@ -285,7 +280,7 @@ def eval(ctx, env, code):
         op = get_op(code, ip)
         if op == ops.IF:
             ip += 1
-            if not is_true(r1):
+            if not space.is_true(r1):
                 ip += get_op(code, ip)
         elif op == ops.SYM:
             ip += 1

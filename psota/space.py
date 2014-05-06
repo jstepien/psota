@@ -1,4 +1,5 @@
 from rpython.rlib.objectmodel import specialize, r_dict, compute_hash
+from rpython.rlib import jit
 
 hash_by_reference = lambda self: compute_hash(self)
 
@@ -76,6 +77,10 @@ class W_Boolean(W_Value):
 
 w_false = W_Boolean(False)
 w_true = W_Boolean(True)
+
+@jit.elidable
+def is_true(obj):
+    return not(obj == w_nil or obj == w_false)
 
 class W_Obj(W_Value):
     def __init__(self, w_meta=w_nil):
