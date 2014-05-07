@@ -83,15 +83,9 @@ def lookup(env, bindings, sym_id):
     return val
 
 class Context:
-    def __init__(self, st=None, bindings=None):
-        if st is None:
-            self._st = SymbolTable()
-        else:
-            self._st = st
-        if bindings is None:
-            self._bindings = Bindings(self._st)
-        else:
-            self._bindings = bindings
+    def __init__(self):
+        self._st = SymbolTable()
+        self._bindings = Bindings(self._st)
 
     def st(self):
         return self._st
