@@ -73,13 +73,14 @@ def base_env(st):
 def lookup_in_bindings(bindings, version, sym_id):
     return bindings.get(sym_id)
 
-def lookup(env, bindings, sym_id):
+def lookup(env, ctx, sym_id):
     val = env.get(sym_id)
+    bindings = ctx.bindings()
     if val is None:
         val = lookup_in_bindings(bindings, jit.promote(bindings.version), sym_id)
     if val is None:
         raise space.LookupException("Undefined symbol: %s" %
-                bindings.st.get_sym(sym_id))
+                ctx.st().get_sym(sym_id))
     return val
 
 class Context:
@@ -278,7 +279,7 @@ def eval(ctx, env, code):
                 ip += get_op(code, ip)
         elif op == ops.SYM:
             ip += 1
-            r1 = lookup(env, jit.promote(ctx.bindings()), get_op(code, ip))
+            r1 = lookup(env, ctx, get_op(code, ip))
         elif op == ops.KEYWORD:
             ip += 1
             r1 = space.W_Keyword(ctx.st().get_sym(get_op(code, ip)))
