@@ -1,4 +1,3 @@
-import eval
 import ops
 from space import (W_List, W_Int, W_EmptyList, W_Vector, W_Sym, W_Fun, unwrap,
         W_Seq, W_ArrayMap, W_Keyword, w_nil, W_String, CompilationException,
