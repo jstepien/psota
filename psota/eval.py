@@ -75,9 +75,10 @@ def lookup_in_bindings(bindings, version, sym_id):
 
 def lookup(env, ctx, sym_id):
     val = env.get(sym_id)
-    bindings = ctx.bindings()
     if val is None:
-        val = lookup_in_bindings(bindings, jit.promote(bindings.version), sym_id)
+        bindings = jit.promote(ctx.bindings())
+        version = jit.promote(bindings.version)
+        val = lookup_in_bindings(bindings, version, sym_id)
     if val is None:
         raise space.LookupException("Undefined symbol: %s" %
                 ctx.st().get_sym(sym_id))
