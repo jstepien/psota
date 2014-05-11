@@ -42,6 +42,13 @@ class Add(space.W_BIF):
 class Subtract(space.W_BIF):
     invoke = int_binary_op(lambda a, b: a - b)
 
+class LT(space.W_BIF):
+    @arity(2)
+    def invoke(self, args, *_):
+        a = space.cast(args[0], space.W_Int)
+        b = space.cast(args[1], space.W_Int)
+        return space.wrap(a.val < b.val)
+
 class List(space.W_BIF):
     def invoke(self, args, *_):
         return space.wrap(args)
@@ -305,6 +312,7 @@ core = [
         ('=', Eq()),
         ('+', Add()),
         ('-', Subtract()),
+        ('<', LT()),
         ('print1', Print1()),
         ('list', List()),
         ('first', First()),
