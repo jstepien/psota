@@ -520,6 +520,9 @@
           (filter f cs))))
     ()))
 
+(defn complement [f]
+  (fn [& args] (not (apply f args))))
+
 (defn take-while [f coll]
   (if (seq coll)
     (lazy-seq
