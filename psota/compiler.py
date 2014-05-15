@@ -175,7 +175,7 @@ def emit_list(ctx, node, recur_bindings):
                 raise CompilationException("Not a recur point :o")
             (ids, rest_id) = recur_bindings
             bindings_ids = [x for x in reversed(ids)] + \
-                    [-rest_id if rest_id >= 0 else -1]
+                    [rest_id if rest_id >= 0 else -1]
             return args_code + [ops.RECUR, len(args)] + bindings_ids
         elif st.has_macro(head):
             return expand_macro(ctx, st.get_macro(head), list_w[1:], recur_bindings)

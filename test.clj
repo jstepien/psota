@@ -22,10 +22,6 @@
          (println "Some tests failed!")
          (throw "fail")))))
 
-(defmacro ignore
-  [& exprs]
-  'true)
-
 (tests
 
   ;; seqs
@@ -49,10 +45,15 @@
   (= [[0 0] [0 1] [1 0] [1 1] [2 0] [2 1] [3 0] [3 1]]
      (for [x (range 4) y (range 2)] [x y]))
 
-  (ignore
-    ;; FIXME: Invoking recur in a fn accepting rest args does not work.
-    (let [f (fn [& xs] (when (seq xs) (recur (next xs))))]
-      (nil? (f 1 2 3))))
+  ;; recur in a fn with rest args
+  (let [xss (atom ())
+        f (fn [& xs]
+            (swap! xss conj xs)
+            (when (seq xs)
+              (recur (next xs))))]
+    (f 1 2 3)
+    (= [nil [3] [2 3] [1 2 3]]
+       (deref xss)))
 
   ;; quasi quoting
   (eval `(= 'a# 'a#))
