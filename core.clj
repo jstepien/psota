@@ -559,6 +559,12 @@
     (last coll)
     (first coll)))
 
+(defn list*
+  [x & xs]
+  (if (seq xs)
+    (cons x (apply list* xs))
+    x))
+
 (defmacro when-let
   [bindings & exprs]
   `(let ~bindings
