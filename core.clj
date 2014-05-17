@@ -567,9 +567,16 @@
 
 (defmacro when-let
   [bindings & exprs]
-  `(let ~bindings
-     (when ~(first bindings)
+  `(when ~(second bindings)
+     (let ~bindings
        ~(cons 'do exprs))))
+
+(defmacro if-let
+  [bindings then else]
+  `(if ~(second bindings)
+     (let ~bindings
+       ~then)
+     ~else))
 
 (defmacro when-first
   [[sym coll] & exprs]
