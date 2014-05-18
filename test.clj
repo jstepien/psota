@@ -55,6 +55,16 @@
     (= [nil [3] [2 3] [1 2 3]]
        (deref xss)))
 
+  (do
+    "Still doesn't work."
+    (comment
+      ((fn [[x & xs]]
+         (if (= 3 x)
+           x
+           (recur xs)))
+       [1 2 3]))
+    1)
+
   ;; quasi quoting
   (eval `(= 'a# 'a#))
   (not (= `a# `a#)))
