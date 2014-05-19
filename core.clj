@@ -305,14 +305,24 @@
   [bindings & body]
   (cons 'let-destructured (cons (destructure bindings) body)))
 
+(defn list*
+  [x & xs]
+  (if (seq xs)
+    (cons x (apply list* xs))
+    x))
+
 (defmacro fn-destructure
   [args & body]
   (if (every? symbol? args)
     (cons 'fn* (cons args body))
-    (let [orig-args (gensym)]
-      `(fn* [& ~orig-args]
-         (let ~(destructure (vector args orig-args))
-           ~(cons 'do body))))))
+    (let [orig-args (vec (map (fn [_] (gensym)) args))
+          zip (fn [rec xs ys]
+                (if (seq xs)
+                  (list* (first xs) (first ys) (rec rec (rest xs) (rest ys)))
+                  ()))]
+      `(fn* ~orig-args
+            (let ~(destructure (zip zip args orig-args))
+              ~(cons 'do body))))))
 
 (defmacro fn-with-single-arity
   [& args]
@@ -558,12 +568,6 @@
   (if (vector? coll)
     (last coll)
     (first coll)))
-
-(defn list*
-  [x & xs]
-  (if (seq xs)
-    (cons x (apply list* xs))
-    x))
 
 (defmacro when-let
   [bindings & exprs]
