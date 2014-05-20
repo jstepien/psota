@@ -42,8 +42,8 @@
   (= {} (dissoc {:a 1} :a))
 
   ;; for
-  (= [[0 0] [0 1] [1 0] [1 1] [2 0] [2 1] [3 0] [3 1]]
-     (for [x (range 4) y (range 2)] [x y]))
+  (= [[1 0] [2 0] [2 1] [3 0] [3 1] [3 2]]
+     (for [x (range 4) y (range x)] [x y]))
 
   ;; recur in a fn with rest args
   (let [xss (atom ())
