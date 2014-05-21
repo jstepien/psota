@@ -5,15 +5,18 @@ import compiler
 import builtins
 
 def entry_point(argv):
-    f = open(argv[1])
+    if len(argv) == 1:
+        filename = "repl.clj"
+    else:
+        filename = argv[1]
+    f = open(filename)
     input = f.read()
     f.close()
     parsed = parser.parse(input)
     ctx = eval.Context()
-    value = None
     for sexp in parsed:
         code = compiler.emit(ctx, sexp)
-        value = ctx.run(code)
+        ctx.run(code)
     return 0
 
 def target(driver, args):
