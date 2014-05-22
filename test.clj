@@ -59,6 +59,10 @@
               :ok
               (recur xs))) [1 2 3]))
 
+  ;; macro expansion
+  (= '(lazy-seq* (fn [] [1 2 3]))
+     (macroexpand-1 '(lazy-seq [1 2 3])))
+
   ;; quasi quoting
   (eval `(= 'a# 'a#))
   (not (= `a# `a#)))

@@ -301,6 +301,22 @@ class Load(space.W_BIF):
         finally:
             f.close()
 
+class Macroexpand1(space.W_BIF):
+    @arity(1)
+    def invoke(self, args, ctx):
+        form = args[0]
+        if not isinstance(form, space.W_List):
+            return form
+        head = form.first()
+        if not isinstance(head, space.W_Sym):
+            return form
+        st = ctx.st()
+        val = head.val
+        if not st.has_macro(val):
+            return form
+        macro_fn = st.get_fn(st.get_macro(val))
+        return eval.invoke_fn(macro_fn, space.unwrap(form.rest()), ctx)
+
 consts = [
     ('nil', space.w_nil),
     ('false', space.w_false),
@@ -349,4 +365,5 @@ core = [
         ('throw', Throw()),
         ('in-ns', InNs()),
         ('load', Load()),
+        ('macroexpand-1', Macroexpand1()),
         ]
