@@ -62,6 +62,8 @@
   ;; macro expansion
   (= '(lazy-seq* (fn [] [1 2 3]))
      (macroexpand-1 '(lazy-seq [1 2 3])))
+  (= '(if 1 (do 2 3) nil)
+     (macroexpand-1 '(when 1 2 3)))
 
   ;; quasi quoting
   (eval `(= 'a# 'a#))

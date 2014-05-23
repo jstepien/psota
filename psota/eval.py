@@ -141,21 +141,21 @@ jitdriver = jit.JitDriver(
 
 def invoke_fn(w_fn, args_w, ctx):
     w_fn = space.cast(w_fn, space.W_Fun)
-    inits = []
     argc = len(args_w)
     arg_ids_len = len(w_fn.arg_ids)
+    rest_args = space.w_empty_list
     if argc > arg_ids_len and w_fn.got_rest_args():
         rest_args = [args_w.pop() for _ in range(argc - arg_ids_len)]
         rest_args.reverse()
-        inits.append((w_fn.rest_args_id, space.wrap(rest_args)))
-    elif w_fn.got_rest_args():
-        inits.append((w_fn.rest_args_id, space.w_empty_list))
+        rest_args = space.wrap(rest_args)
     args = [args_w.pop() for _ in range(arg_ids_len)]
     idx = 0
     env = Env([], w_fn.env)
     for arg_id in reversed(w_fn.arg_ids):
         env.set(arg_id, args[idx])
         idx += 1
+    if w_fn.got_rest_args():
+        env.set(w_fn.rest_args_id, rest_args)
     return eval(ctx, env, w_fn.code)
 
 @jit.unroll_safe
