@@ -15,7 +15,7 @@ def entry_point(argv):
     parsed = parser.parse(input)
     ctx = eval.Context()
     for sexp in parsed:
-        code = compiler.emit(ctx, sexp)
+        code = compiler.emit(ctx, eval.read(ctx, sexp))
         ctx.run(code)
     return 0
 

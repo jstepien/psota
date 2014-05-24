@@ -168,7 +168,7 @@ class ReadString(space.W_BIF):
         parsed = parse(w_str.val)
         if len(parsed) == 0:
             raise space.ParsingException("EOF")
-        return parsed[0]
+        return eval.read(ctx, parsed[0])
 
 class Class(space.W_BIF):
     @arity(1)
@@ -296,7 +296,7 @@ class Load(space.W_BIF):
             input = f.read()
             parsed = parse(input)
             for sexp in parsed:
-                code = emit(ctx, sexp)
+                code = emit(ctx, eval.read(ctx, sexp))
                 ctx.run(code)
         finally:
             f.close()
@@ -366,4 +366,5 @@ core = [
         ('in-ns', InNs()),
         ('load', Load()),
         ('macroexpand-1', Macroexpand1()),
+        ('reader', space.w_nil),
         ]

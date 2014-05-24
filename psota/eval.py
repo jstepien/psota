@@ -73,16 +73,25 @@ def base_env(st):
 def lookup_in_bindings(bindings, version, sym_id):
     return bindings.get(sym_id)
 
+def lookup_in_ctx(ctx, sym_id):
+    bindings = jit.promote(ctx.bindings())
+    version = jit.promote(bindings.version)
+    return lookup_in_bindings(bindings, version, sym_id)
+
 def lookup(env, ctx, sym_id):
     val = env.get(sym_id)
     if val is None:
-        bindings = jit.promote(ctx.bindings())
-        version = jit.promote(bindings.version)
-        val = lookup_in_bindings(bindings, version, sym_id)
+        val = lookup_in_ctx(ctx, sym_id)
     if val is None:
         raise space.LookupException("Undefined symbol: %s" %
                 ctx.st().get_sym(sym_id))
     return val
+
+def read(ctx, form):
+    reader = lookup_in_ctx(ctx, ctx.st().get_sym_id("reader"))
+    if reader is space.w_nil:
+        return form
+    return invoke_fn(reader, [form], ctx)
 
 class Context:
     def __init__(self):

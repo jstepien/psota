@@ -7,6 +7,10 @@
 
 (def* gensym (fn* [] (gensym* "G__")))
 
+(def* identity (fn* [x] x))
+
+(def* reader identity)
+
 (defmacro fn
   [& args]
   (if (symbol? (first args))
