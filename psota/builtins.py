@@ -258,6 +258,14 @@ class Keyword(space.W_BIF):
             return space.W_Keyword(w_obj.val)
         return space.w_nil
 
+class Symbol(space.W_BIF):
+    @arity(1)
+    def invoke(self, args, ctx):
+        w_obj = args[0]
+        if isinstance(w_obj, space.W_String):
+            return space.W_Sym(w_obj.val)
+        return space.w_nil
+
 class Str(space.W_BIF):
     def invoke(self, args, *_):
         acc = ""
@@ -360,6 +368,7 @@ core = [
         ('swap!', SwapBang()),
         ('getline', Getline()),
         ('keyword', Keyword()),
+        ('symbol', Symbol()),
         ('str', Str()),
         ('hash', Hash()),
         ('throw', Throw()),
