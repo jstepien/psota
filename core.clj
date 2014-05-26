@@ -9,8 +9,6 @@
 
 (def* identity (fn* [x] x))
 
-(def* reader identity)
-
 (defmacro fn
   [& args]
   (if (symbol? (first args))
@@ -166,6 +164,27 @@
 (defn vec
   [coll]
   (apply vector coll))
+
+(defn reader [form]
+  (let [walk (fn [w f obj]
+               (let [rec (fn [x] (w w f x))]
+                 (f (cond (list? obj) (apply list (map rec obj))
+                          (vector? obj) (apply vector (map rec obj))
+                          :else obj))))
+        l (fn [coll]
+            (if (= (symbol "#") (first coll))
+              (let [sym (gensym)
+                    rep (fn [x]
+                           (if (= '% x)
+                             sym
+                             x))]
+                (list 'fn [sym] (walk walk rep (second coll))))
+              coll))
+        f (fn [obj]
+            (if (list? obj)
+              (l obj)
+              obj))]
+    (walk walk f form)))
 
 (defmacro loop
   [bindings & body]

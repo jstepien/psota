@@ -83,6 +83,11 @@ class QuoppaParser(PackratParser):
        s = sexpr
        return {unquote(s)};
 
+    lambda_expr:
+       `#`
+       s = list
+       return {lambda_expr(s)};
+
     sexpr:
         list
       | vector
@@ -90,6 +95,7 @@ class QuoppaParser(PackratParser):
       | quote
       | quasiquote
       | unquote
+      | lambda_expr
       | FIXNUM
       | keyword
       | STRING
@@ -136,6 +142,9 @@ def quasiquote(sexpr):
 
 def unquote(sexpr):
     return wrap([W_Sym('~'), sexpr])
+
+def lambda_expr(sexpr):
+    return wrap([W_Sym('#'), sexpr])
 
 def map(args):
     return W_ArrayMap(args)
