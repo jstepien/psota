@@ -49,7 +49,8 @@ step by invoking
 ## Frequently asked questions
 
 None were asked! Feel free to fill this gap by contacting me over e-mail or at
-[@janstepien][twitter]. I'd love to hear from you.
+[@janstepien][twitter]. There's also the [#psota][irc] IRC channel on freenode.
+I'd love to hear from you.
 
 ## License
 
@@ -80,3 +81,4 @@ terms.
 [pypy]: http://pypy.org/download.html#building-from-source
 [clj]: http://clojure.org/
 [twitter]: https://twitter.com/janstepien
+[irc]: https://webchat.freenode.net/?channels=%23psota
