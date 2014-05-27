@@ -3,6 +3,28 @@
 An implementation of a Lisp which is suspiciously similar to [Clojure][clj].
 [![Build Status](https://travis-ci.org/jstepien/psota.svg)](https://travis-ci.org/jstepien/psota)
 
+## Downloads and usage
+
+[Download a tarball][dl] for your platform—Linux or Mac OS X—extract it and
+start the REPL with:
+
+    ./psota
+
+If you have [rlwrap][rlwrap] installed you can augment the REPL with a history
+and readline keybindings by invoking it with:
+
+    rlwrap ./psota
+
+You can execute an arbitrary file by passing its name as an argument:
+
+    ./psota test.clj
+
+Instructions for building Psota from source can be found in one of following
+sections.
+
+[dl]: https://stepien.cc/~jan/psota/
+[rlwrap]: http://utopia.knoware.nl/~hlub/uck/rlwrap/
+
 ## Goals and rationale
 
 tl;dr: I want the Clojure REPL to start up faster than I can pronounce _psota_.
