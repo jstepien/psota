@@ -35,6 +35,20 @@
   [name args & body]
   `(def ~name ~(cons 'fn (cons args body))))
 
+(defn +
+  [& args]
+  (reduce* binary+ 0 args))
+
+(defn *
+  [& args]
+  (reduce* binary* 1 args))
+
+(defn -
+  [x & xs]
+  (if (= () xs)
+    (binary- 0 x)
+    (reduce* binary- x xs)))
+
 (defn not (x) (if x false true))
 
 (defmacro when

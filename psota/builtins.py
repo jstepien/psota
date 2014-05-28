@@ -332,10 +332,10 @@ consts = [
     ]
 
 core = [
-        ('*', Mult()),
+        ('binary*', Mult()),
         ('=', Eq()),
-        ('+', Add()),
-        ('-', Subtract()),
+        ('binary+', Add()),
+        ('binary-', Subtract()),
         ('<', LT()),
         ('print1', Print1()),
         ('list', List()),
