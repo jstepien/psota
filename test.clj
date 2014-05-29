@@ -15,7 +15,7 @@
                      `(try
                         (when-not ~expr
                           (fail "F" ~success-sym '~expr))
-                        (catch Throwable ~'e
+                        (catch ~'e
                           (fail "E" ~success-sym '~expr '-> ~'e))))
                    exprs))
        (when-not (deref ~success-sym)
