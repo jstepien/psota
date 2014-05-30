@@ -419,15 +419,6 @@
 
 (def zero? (partial = 0))
 
-(defn range
-  [n]
-  (let [chunk-size 1
-        helper (fn f [s e]
-                 (if (= s e)
-                   ()
-                   (lazy-seq (cons s (f (+ s chunk-size) e)))))]
-    (helper 0 n)))
-
 (defmacro var
   [sym]
   `(var* (quote ~sym)))
@@ -624,5 +615,12 @@
   `(let [~sym (first ~coll)]
      (when ~sym
        ~(cons 'do exprs))))
+
+(defn iterate [f x]
+  (cons x (lazy-seq (iterate f (f x)))))
+
+(defn range
+  [n]
+  (take n (iterate inc 0)))
 
 (load "for.clj")
