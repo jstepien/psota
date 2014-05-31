@@ -168,12 +168,15 @@ def emit_list(ctx, node, recur_bindings):
         elif head == "recur":
             args = list_w[1:]
             args_code = []
+            (ids, rest_id) = recur_bindings
+            if len(args) < len(ids):
+                msg = "Invalid number of recur arguments: %s given, %s expected"
+                raise CompilationException(msg % (len(args), len(ids)))
             for arg in args:
                 c = emit(ctx, arg)
                 args_code += c + [ops.PUSH]
             if recur_bindings == no_recur_bindings:
                 raise CompilationException("Not a recur point :o")
-            (ids, rest_id) = recur_bindings
             bindings_ids = [x for x in reversed(ids)] + \
                     [rest_id if rest_id >= 0 else -1]
             return args_code + [ops.RECUR, len(args)] + bindings_ids

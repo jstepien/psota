@@ -69,6 +69,13 @@
               :ok
               (recur xs))) [1 2 3]))
 
+  (try
+    (eval
+      '(loop [x 1, y 2]
+         (recur 3)))
+    (catch e
+      (= e "Invalid number of recur arguments: 1 given, 2 expected")))
+
   ;; macro expansion
   (= '(lazy-seq* (fn [] [1 2 3]))
      (macroexpand-1 '(lazy-seq [1 2 3])))
