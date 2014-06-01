@@ -204,9 +204,7 @@ def emit(ctx, node, recur_bindings=no_recur_bindings):
         sym = node.val
         if sym == "~":
             raise Exception("Shouldn't see '~' here!")
-        if not sym in st.syms:
-            raise CompilationException("Undefined symbol: %s" % str(sym))
-        return [ops.SYM, st.get_sym_id(sym)]
+        return [ops.SYM, st.add_sym(sym)]
     elif isinstance(node, W_Keyword):
         sym = node.val
         id = st.add_sym(sym)

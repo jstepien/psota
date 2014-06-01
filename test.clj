@@ -55,6 +55,16 @@
   (= [[1 0] [2 0] [2 1] [3 0] [3 1] [3 2]]
      (for [x (range 4) y (range x)] [x y]))
 
+  ;; qualified symbols
+
+  (do
+    (def ns-check :orig-ns)
+    (in-ns 'tmp-ns)
+    (def ns-check :new-ns)
+    (in-ns 'user)
+    (and (= :orig-ns ns-check)
+         (= :new-ns tmp-ns/ns-check)))
+
   ;; recur in a fn with rest args
   (let [xss (atom ())
         f (fn [& xs]

@@ -17,8 +17,9 @@ class SymbolTable:
 
     def add_sym(self, sym):
         assert isinstance(sym, str)
-        if sym in self.sym_ids:
-            return self.sym_ids[sym]
+        found = self.get_sym_id(sym)
+        if found >= 0:
+            return found
         id = len(self.syms)
         self.syms.append(sym)
         self.sym_ids[sym] = id
@@ -26,7 +27,8 @@ class SymbolTable:
 
     def get_sym_id(self, sym):
         assert isinstance(sym, str)
-        return self.sym_ids[sym]
+        id = self.sym_ids.get(sym, -1)
+        return id
 
     def get_sym(self, id):
         assert isinstance(id, int)

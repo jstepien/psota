@@ -30,6 +30,24 @@ class Bindings:
         w_var = self.vars[self.ns].get(key, None)
         if w_var is not None:
             return w_var.w_val
+        return self._qualified_sym(key)
+
+    def _qualified_sym(self, key):
+        sym = self.st.get_sym(key)
+        idx = sym.find("/") + 1
+        if idx <= 1:
+            return
+        ns_idx = idx - 1
+        assert ns_idx >= 0
+        ns = self.vars.get(sym[:ns_idx], None)
+        if ns is None:
+            return
+        sym_id = self.st.get_sym_id(sym[idx:])
+        if sym_id < 0:
+            return
+        w_var = ns.get(sym_id, None)
+        if w_var is not None:
+            return w_var.w_val
 
     def get_var(self, sym):
         assert isinstance(sym, str)
