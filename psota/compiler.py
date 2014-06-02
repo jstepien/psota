@@ -72,6 +72,8 @@ def somehow_quoted_emit(list_handling_fn):
             return [ops.STRING, id]
         elif isinstance(w_val, W_Int):
             return [ops.INT, w_val.val]
+        elif isinstance(w_val, W_Char):
+            return [ops.CHAR, w_val.val]
         elif isinstance(w_val, W_List):
             return list_handling_fn(ctx, w_val, f)
         elif isinstance(w_val, W_Vector):
