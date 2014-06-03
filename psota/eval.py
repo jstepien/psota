@@ -339,16 +339,24 @@ def eval(ctx, env, code):
             ip += 1
             sp -= 2
         elif op == ops.TRY:
+            ip += 1
+            finally_id = get_op(code, ip)
             try:
                 assert isinstance(r1, space.W_Fun)
                 r1 = eval(ctx, env, r1.code)
-                ip += code[ip + 1]
+                ip += get_op(code, ip + 1)
             except space.SpaceException as ex:
+                if get_op(code, ip + 1) == 1:
+                    raise ex
                 if stack is empty_stack:
                     stack = [None for _ in range(stack_size)]
                 stack[jit.promote(sp)] = space.wrap(ex.reason())
                 sp += 1
                 ip += 1
+            finally:
+                if finally_id >= 0:
+                    finally_fn = ctx.st().get_fn(finally_id).with_env(env)
+                    eval(ctx, env, finally_fn.code)
         elif op == ops.CHAR:
             ip += 1
             r1 = space.W_Char(get_op(code, ip))

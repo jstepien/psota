@@ -539,14 +539,18 @@
 
 (defmacro try
   [& forms]
-  (let [forms-number (count forms)
-        maybe-catch (last forms)
-        got-catch (and (first maybe-catch)
-                       (= 'catch (first maybe-catch)))]
-    (if got-catch
+  (let [find-form (fn [sym] (first (filter #(= sym (first %)) forms)))
+        catch-form (find-form 'catch)
+        finally-form (find-form 'finally)]
+    (if (or catch-form finally-form)
       `(try*
-        (fn* [] ~(cons 'do (take (- forms-number 1) forms)))
-        (fn* [~(second maybe-catch)] ~(cons 'do (drop 2 maybe-catch))))
+        (fn* [] ~(cons 'do (take-while #(not (= 'catch (first %))) forms)))
+        ~(if catch-form
+           (list 'fn* [(second catch-form)] (cons 'do (drop 2 catch-form)))
+           nil)
+        ~(if finally-form
+           (list 'fn* [] (cons 'do (rest finally-form)))
+           nil))
       (cons 'do forms))))
 
 (defn filter [f coll]

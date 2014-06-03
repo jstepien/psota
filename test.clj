@@ -86,6 +86,15 @@
     (catch e
       (= e "Invalid number of recur arguments: 1 given, 2 expected")))
 
+  (let [at (atom [])]
+    (try
+      (throw "thrown")
+      (catch e
+        (swap! at conj e))
+      (finally
+        (swap! at conj :ok)))
+    (= (deref at) [:ok "thrown"]))
+
   ;; macro expansion
   (= '(lazy-seq* (fn [] [1 2 3]))
      (macroexpand-1 '(lazy-seq [1 2 3])))

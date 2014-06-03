@@ -53,10 +53,14 @@ def fn(ctx, list_w):
     return [ops.FN, fn_id]
 
 def try_block(ctx, list_w):
-    _, w_body, w_catch = list_w
+    _, w_body, w_catch, w_finally = list_w
     fn_code = fn(ctx, unwrap(w_body))
-    catch_code = fn(ctx, unwrap(w_catch))
-    return fn_code + [ops.TRY, 3 + len(catch_code)] + catch_code + [ops.INVOKE, 1]
+    if w_catch is w_nil:
+        catch_code = []
+    else:
+        catch_code = fn(ctx, unwrap(w_catch)) + [ops.INVOKE, 1]
+    finally_id = fn(ctx, unwrap(w_finally))[1] if w_finally is not w_nil else -1
+    return fn_code + [ops.TRY, finally_id, 1 + len(catch_code)] + catch_code
 
 def somehow_quoted_emit(list_handling_fn):
     def f(ctx, w_val):
